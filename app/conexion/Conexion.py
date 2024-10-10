@@ -6,12 +6,12 @@ class Conexion:
     """
     def __init__(self):
         # https://www.psycopg.org/docs/extensions.html#psycopg2.extensions.parse_dsn
-        dbname = "veterinaria-db"
-        user = "juandba"
-        password = "admin"
-        host = "127.0.0.1"
+        dbname = "miBd"
+        user = "postgres"
+        password = "54321"
+        host = "localhost"
         port = 5432
-        #self.con = psycopg2.connect("dbname=veterinaria-db user=juandba host=localhost password=admin")
+        #self.con = psycopg2.connect("dbname=veterinariadb user=Postgres host=localhost password=15dediciembre")
         self.con = psycopg2.connect(dbname=dbname, user=user, password=password, host=host, port=port)
 
     """getConexion

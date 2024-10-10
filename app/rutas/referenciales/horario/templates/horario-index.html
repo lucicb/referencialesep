@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
     
 {% block titulo %}
-Ciudades
+Horarios
 {% endblock %}
 
 {% block contenido %}
 <div class="container mt-4">
-    <h3>Listar Ciudades</h3>
+    <h3>Listar Horarios</h3>
 
     <!-- tarjeta -->
     <div class="card">
@@ -42,9 +42,9 @@ Ciudades
           <!-- Modal body -->
           <div class="modal-body">
             <div class="form-group">
-              <input type="hidden" id="txtIdCiudad">
+              <input type="hidden" id="txtIdHorario">
               <label for="txtDescripcion">Descripción:</label>
-              <input type="text" class="form-control" placeholder="Ingrese alguna ciudad" id="txtDescripcion">
+              <input type="text" class="form-control" placeholder="Ingrese un horario" id="txtDescripcion">
             </div>
           </div>
 
@@ -77,7 +77,7 @@ Ciudades
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax:'/api/v1/ciudades',
+      ajax:'/api/v1/horarios',
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
@@ -92,9 +92,9 @@ Ciudades
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
       // Setear un título a modal
-      $('#modalTitle').text("Agregar una Ciudad");
+      $('#modalTitle').text("Agregar un Horario");
       // inicia ventana modal
-      $('#txtIdCiudad').val("");
+      $('#txtIdHorario').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
@@ -102,13 +102,13 @@ Ciudades
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const idCiudad = $('#txtIdCiudad').val();
+      const idHorario = $('#txtIdHorario').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(idCiudad) {
+      if(idHorario) {
         // update
-        fetch(`/api/v1/ciudades/${idCiudad}`, {
+        fetch(`/api/v1/horarios/${idHorario}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -118,17 +118,17 @@ Ciudades
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "La ciudad ha sido actualizada correctamente.", "success");
+            Swal.fire("Actualizado", "El horario ha sido actualizado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
-          Swal.fire("Error", "Ocurrió un error al actualizar la ciudad.", "error");
+          Swal.fire("Error", "Ocurrió un error al actualizar el horario.", "error");
         });
       } else {
         // insert
-        fetch(`/api/v1/ciudades`, {
+        fetch(`/api/v1/horarios`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -138,13 +138,13 @@ Ciudades
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "La ciudad ha sido agregada correctamente.", "success");
+            Swal.fire("Actualizado", "El horario ha sido agregado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
-          Swal.fire("Error", "Ocurrió un error al guardar la ciudad.", "error");
+          Swal.fire("Error", "Ocurrió un error al guardar el horario.", "error");
         });
       }
       $('#txtDescripcion').val("");
@@ -162,14 +162,13 @@ Ciudades
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
-          $('#modalTitle').text("Editar una Ciudad");
+          $('#modalTitle').text("Editar un Horario");
 
-          const idCiudad = $(this).data('id');
-          $('#txtIdCiudad').val(idCiudad);
+          const idHorario = $(this).data('id');
+          $('#txtIdHorario').val(idHorario);
 
           // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/ciudades/${idCiudad}`, {
+          fetch(`/api/v1/horarios/${idHorario}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
@@ -187,7 +186,7 @@ Ciudades
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const idCiudad = $(this).data('id');
+      const idHorario = $(this).data('id');
       // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -196,7 +195,7 @@ Ciudades
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/ciudades/${idCiudad}`, {
+          fetch(`/api/v1/horarios/${idHorario}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
@@ -214,7 +213,7 @@ Ciudades
               Swal.fire(data.error);
             }
           }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar la ciudad.", "error");
+            Swal.fire("Error", "Ocurrió un error al eliminar el horario.", "error");
           });
         }
       });
