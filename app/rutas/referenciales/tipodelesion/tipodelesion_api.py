@@ -1,61 +1,60 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.tipodepago.TipodepagoDao import TipodepagoDao
+from app.dao.referenciales.tipodelesion.TipodelesionDao import TipodelesionDao
 
-tippapi = Blueprint('tippapi', __name__)
+tiplapi = Blueprint('tiplapi', __name__)
 
-# Trae todos los tipos de pago
-@tippapi.route('/tipodepago', methods=['GET'])
-def getTipodepago():
-    tippdao = TipodepagoDao()
+# Trae todas las ciudades
+@tiplapi.route('/tipodelesion', methods=['GET'])
+def getTipodelesion():
+    tipldao = TipodelesionDao()
 
     try:
-        tipodepago = tippdao.getTipodepago()
+        tipodelesion = tipldao.getTipodelesion()
 
         return jsonify({
             'success': True,
-            'data': tipodepago,
+            'data': tipodelesion,
             'error': None
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error al obtener todos los tipos de pago: {str(e)}")
+        app.logger.error(f"Error al obtener todos los tipo de lesiones: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Trae un tipo de pago por su ID
-@tippapi.route('/tipodepago/<int:tipodepago_id>', methods=['GET'])
-def getTipodepagoById(tipodepago_id):
-    tippdao = TipodepagoDao()
+@tiplapi.route('/tipodelesion/<int:tipodelesion_id>', methods=['GET'])
+def getTipodelesion(tipodelesion_id):
+    tipldao = TipodelesionDao()
 
     try:
-        tipodepago = tippdao.getTipodepagoById(tipodepago_id)
+        tipodelesion = tipldao.getTipodelesionById(tipodelesion_id)
 
-        if tipodepago:
+        if tipodelesion:
             return jsonify({
                 'success': True,
-                'data': tipodepago,
+                'data': tipodelesion,
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el tipo de pago con el ID proporcionado.'
+                'error': 'No se encontró el tipo de lesion con el ID proporcionado.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al obtener el tipo de pago: {str(e)}")
+        app.logger.error(f"Error al obtener tipo de lesion: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Agrega un nuevo tipo de pago
-@tippapi.route('/tipodepago', methods=['POST'])
-def addTipodepago():
+# Agrega una nueva ciudad
+@tiplapi.route('/tipodelesion', methods=['POST'])
+def addTipodelesion():
     data = request.get_json()
-    tippdao = TipodepagoDao()
+    tipldao = TipodelesionDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -70,27 +69,26 @@ def addTipodepago():
 
     try:
         descripcion = data['descripcion'].upper()
-        tipodepago_id = tippdao.guardarTipodepago(descripcion)
-        if tipodepago_id is not None:
+        tipodelesion_id = tipldao.guardarTipodelesion(descripcion)
+        if tipodelesion_id is not None:
             return jsonify({
                 'success': True,
-                'data': {'id': tipodepago_id, 'descripcion': descripcion},
+                'data': {'id': tipodelesion_id, 'descripcion': descripcion},
                 'error': None
             }), 201
         else:
-            return jsonify({ 'success': False, 'error': 'No se pudo guardar el tipo de pago. Consulte con el administrador.' }), 500
+            return jsonify({ 'success': False, 'error': 'No se pudo guardar el tipo de lesion. Consulte con el administrador.' }), 500
     except Exception as e:
-        app.logger.error(f"Error al agregar tipo de pago: {str(e)}")
+        app.logger.error(f"Error al agregar tipo de lesion: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Actualiza un tipo de pago existente
-@tippapi.route('/tipodepago/<int:tipodepago_id>', methods=['PUT'])
-def updateTipodepago(tipodepago_id):
+@tiplapi.route('/tipodelesion/<int:tipodelesion_id>', methods=['PUT'])
+def updateTipodelesion(tipodelesion_id):
     data = request.get_json()
-    tippdao = TipodepagoDao()
+    tipldao = TipodelesionDao()
 
     # Validar que el JSON no esté vacío y tenga las propiedades necesarias
     campos_requeridos = ['descripcion']
@@ -104,44 +102,44 @@ def updateTipodepago(tipodepago_id):
                             }), 400
     descripcion = data['descripcion']
     try:
-        if tippdao.updateTipodepago(tipodepago_id, descripcion.upper()):
+        if tipldao.updateTipodelesion(tipodelesion_id, descripcion.upper()):
             return jsonify({
                 'success': True,
-                'data': {'id': tipodepago_id, 'descripcion': descripcion},
+                'data': {'id': tipodelesion_id, 'descripcion': descripcion},
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el tipo de pago con el ID proporcionado o no se pudo actualizar.'
+                'error': 'No se encontró el tipo de lesion con el ID proporcionado o no se pudo actualizar.'
             }), 404
     except Exception as e:
-        app.logger.error(f"Error al actualizar el tipo de pago: {str(e)}")
+        app.logger.error(f"Error al actualizar tipo de lesion: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'
         }), 500
 
-# Elimina un tipo de pago
-@tippapi.route('/tipodepago/<int:tipodepago_id>', methods=['DELETE'])
-def deleteTipodepago(tipodepago_id):
-    tippdao = TipodepagoDao()
+@tiplapi.route('/tipodelesion/<int:ciudad_id>', methods=['DELETE'])
+def deleteTipodelesion(tipodelesion_id):
+    tipldao = TipodelesionDao()
 
     try:
-        if tippdao.deleteTipodepago(tipodepago_id):
+        # Usar el retorno de eliminarCiudad para determinar el éxito
+        if tipldao.deleteTipodelesion(tipodelesion_id):
             return jsonify({
                 'success': True,
-                'mensaje': f'Tipo de pago con ID {tipodepago_id} eliminado correctamente.',
+                'mensaje': f'Tipo de lesion con ID {tipodelesion_id} eliminada correctamente.',
                 'error': None
             }), 200
         else:
             return jsonify({
                 'success': False,
-                'error': 'No se encontró el tipo de pago con el ID proporcionado o no se pudo eliminar.'
+                'error': 'No se encontró el tipo de lesion con el ID proporcionado o no se pudo eliminar.'
             }), 404
 
     except Exception as e:
-        app.logger.error(f"Error al eliminar el tipo de pago: {str(e)}")
+        app.logger.error(f"Error al eliminar tipo de lesion: {str(e)}")
         return jsonify({
             'success': False,
             'error': 'Ocurrió un error interno. Consulte con el administrador.'

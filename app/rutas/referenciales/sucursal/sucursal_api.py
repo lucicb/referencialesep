@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app as app
-from app.dao.referenciales.sucursal.SucursalDao import SucursalDao
+from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
 
 sucurapi = Blueprint('sucurapi', __name__)
 

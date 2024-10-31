@@ -12,12 +12,17 @@ from app.rutas.referenciales.persona.persona_routes import persmod  #persona
 from app.rutas.referenciales.dia.dia_routes import diamod  #dia
 from app.rutas.referenciales.turno.turno_routes import turmod  #turno
 from app.rutas.referenciales.horario.horario_routes import horamod #horario
-from app.rutas.referenciales.sucursal.sucursal_routes import sucurmod #sucursal
+##from app.rutas.referenciales.sucursal.sucursal_routes import sucurmod #sucursal
 from app.rutas.referenciales.profesional.profesional_routes import profmod #profesional
 from app.rutas.referenciales.tipodepago.tipodepago_routes import tippmod #tipodepago
 from app.rutas.referenciales.tipodeconsulta.tipodeconsulta_routes import tipcmod #tipodeconsulta
 from app.rutas.referenciales.cargo.cargo_routes import carmod #cargo 
+from app.rutas.referenciales.departamento.departamento_routes import depmod #cargo 
 
+
+# importar gestionar compras
+from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes \
+    import pdcmod
 
 
 # registrar referenciales
@@ -31,13 +36,17 @@ app.register_blueprint(persmod, url_prefix=f'{modulo0}/persona') #persona
 app.register_blueprint(diamod, url_prefix=f'{modulo0}/dia') #dia
 app.register_blueprint(turmod, url_prefix=f'{modulo0}/turno') #turno
 app.register_blueprint(horamod, url_prefix=f'{modulo0}/horario') 
-app.register_blueprint(sucurmod, url_prefix=f'{modulo0}/sucursal')
+##app.register_blueprint(sucurmod, url_prefix=f'{modulo0}/sucursal')
 app.register_blueprint(profmod, url_prefix=f'{modulo0}/profesional')
 app.register_blueprint(tippmod, url_prefix=f'{modulo0}/tipodepago')
 app.register_blueprint(tipcmod, url_prefix=f'{modulo0}/tipodeconsulta')
 app.register_blueprint(carmod, url_prefix=f'{modulo0}/cargo')
+app.register_blueprint(depmod, url_prefix=f'{modulo0}/departamento')
 
 
+# registro de modulos - gestionar compras
+modulo1 = '/gestionar-compras'
+app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')
 
 
 #ciudad
@@ -68,7 +77,7 @@ from app.rutas.referenciales.turno.turno_api import turnoapi
 from app.rutas.referenciales.horario.horario_api import horaapi
 
 #sucursal
-from app.rutas.referenciales.sucursal.sucursal_api import sucurapi
+##from app.rutas.referenciales.sucursal.sucursal_api import sucurapi
 
 #profesional
 from app.rutas.referenciales.profesional.profesional_api import profapi
@@ -81,6 +90,13 @@ from app.rutas.referenciales.tipodeconsulta.tipodeconsulta_api import tipcapi
 
 #cargo
 from app.rutas.referenciales.cargo.cargo_api import carapi
+
+from app.rutas.referenciales.departamento.departamento_api import depapi
+
+
+from app.rutas.referenciales.sucursal.sucursal_api import sucurapi
+from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
+    import pdcapi
 
 
 
@@ -123,8 +139,8 @@ app.register_blueprint(horaapi, url_prefix=version1)
 
 
 #sucursal
-version1 = '/api/v1'
-app.register_blueprint(sucurapi, url_prefix=version1)
+##version1 = '/api/v1'
+##app.register_blueprint(sucurapi, url_prefix=version1)
 
 #profesional
 version1 = '/api/v1' 
@@ -141,5 +157,16 @@ app.register_blueprint(tipcapi, url_prefix=version1)
 #cargo
 version1 = '/api/v1' 
 app.register_blueprint(carapi, url_prefix=version1)
- 
+
+#departamento
+version1 = '/api/v1' 
+app.register_blueprint(depapi, url_prefix=version1)
+
+
+ # Gestionar compras API
+apiversion1 = '/api/v1'
+app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')
+app.register_blueprint(sucurapi, url_prefix=apiversion1)
+
+
 

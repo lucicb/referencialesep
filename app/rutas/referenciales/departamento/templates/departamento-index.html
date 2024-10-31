@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
-    
+
 {% block titulo %}
-Tipo de Pago
+Departamentos
 {% endblock %}
 
 {% block contenido %}
 <div class="container mt-4">
-    <h3>Listar Tipo de Pago</h3>
+    <h3>Cargar departamentos</h3>
 
     <!-- tarjeta -->
     <div class="card">
       <div class="card-header">
-        <button type="button" class="btn btn-outline-primary" id="btnAgregar">Agregar</button>
+        <button type="button" class="btn btn-primary" id="btnAgregar">Agregar</button>
       </div>
       <div class="card-body">
         <table class="table table-striped" id="tbl">
@@ -42,9 +42,9 @@ Tipo de Pago
           <!-- Modal body -->
           <div class="modal-body">
             <div class="form-group">
-              <input type="hidden" id="txtIdTipodepago">
+              <input type="hidden" id="txtIdDepartamento">
               <label for="txtDescripcion">Descripción:</label>
-              <input type="text" class="form-control" placeholder="Ingrese algun tipo de pago" id="txtDescripcion">
+              <input type="text" class="form-control" placeholder="Ingrese algún departamento" id="txtDescripcion">
             </div>
           </div>
 
@@ -77,12 +77,12 @@ Tipo de Pago
       language: {
         url: "{{ url_for('static', filename='vendor/datatables/es-ES.json') }}",
       },
-      ajax:'/api/v1/tipodepago',
+      ajax:'/api/v1/departamentos',
       columns: [
         { data: 'descripcion' },
         { data: function(row) {
-            return `<button type="button" name="btn_editar" class="btn btn-outline-primary" data-id="${row.id}">Editar</button>
-                    <button type="button" name="btn_eliminar" class="btn btn-outline-warning" data-id="${row.id}">Eliminar</button>`
+            return `<button type="button" name="btn_editar" class="btn btn-primary" data-id="${row.id}">Editar</button>
+                    <button type="button" name="btn_eliminar" class="btn btn-danger" data-id="${row.id}">Eliminar</button>`
           }
         }
       ]
@@ -92,9 +92,9 @@ Tipo de Pago
   const agregar = () => {
     $('#btnAgregar').on('click', function(){
       // Setear un título a modal
-      $('#modalTitle').text("Agregar un tipo de pago");
+      $('#modalTitle').text("Agregar un Departamento");
       // inicia ventana modal
-      $('#txtIdTipodepago').val("");
+      $('#txtIdDepartamento').val("");
       $('#txtDescripcion').val("");
       $('#modalFormulario').modal();
     });
@@ -102,13 +102,13 @@ Tipo de Pago
 
   const guardar = () => {
     $('#btnGuardar').on('click', function() {
-      const idTipodepago = $('#txtIdTipodepago').val();
+      const idDepartamento = $('#txtIdDepartamento').val();
       const nuevaDescripcion = $('#txtDescripcion').val();
       const tabla = $('#tbl').DataTable();
 
-      if(idTipodepago) {
+      if(idDepartamento) {
         // update
-        fetch(`/api/v1/tipodepago/${idTipodepago}`, {
+        fetch(`/api/v1/departamentos/${idDepartamento}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -118,17 +118,17 @@ Tipo de Pago
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El tipo de pago ha sido actualizado correctamente.", "success");
+            Swal.fire("Actualizado", "El departamento ha sido actualizado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
-          Swal.fire("Error", "Ocurrió un error al actualizar el tipo de pago.", "error");
+          Swal.fire("Error", "Ocurrió un error al actualizar el departamento.", "error");
         });
       } else {
         // insert
-        fetch(`/api/v1/tipodepago`, {
+        fetch(`/api/v1/departamentos`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -138,13 +138,13 @@ Tipo de Pago
         .then(data => {
           if(data && !data.error && data.success) {
             tabla.ajax.reload();
-            Swal.fire("Actualizado", "El tipo de pago ha sido agregado correctamente.", "success");
+            Swal.fire("Guardado", "El departamento ha sido agregado correctamente.", "success");
           } else {
             Swal.fire(data.error);
           }
         }).catch(err => {
           console.error(err);
-          Swal.fire("Error", "Ocurrió un error al guardar el tipo de pago.", "error");
+          Swal.fire("Error", "Ocurrió un error al guardar el departamento.", "error");
         });
       }
       $('#txtDescripcion').val("");
@@ -162,14 +162,13 @@ Tipo de Pago
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          //Swal.fire("Saved!", "", "success");
-          $('#modalTitle').text("Editar un tipo de pago");
+          $('#modalTitle').text("Editar un Departamento");
 
-          const idTipodepago = $(this).data('id');
-          $('#txtIdTipodepago').val(idTipodepago);
+          const idDepartamento = $(this).data('id');
+          $('#txtIdDepartamento').val(idDepartamento);
 
           // Necesitamos obtener la descripción del backend
-          fetch(`/api/v1/tipodepago/${idTipodepago}`, {
+          fetch(`/api/v1/departamentos/${idDepartamento}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json'
@@ -187,7 +186,7 @@ Tipo de Pago
 
   const eliminar = () => {
     $('#tbl').on('click', 'button[name="btn_eliminar"]',function(){
-      const idTipodepago = $(this).data('id');
+      const idDepartamento = $(this).data('id');
       // Mostrar mensaje de confirmación usando sweetalert
       Swal.fire({
         title: "¿Deseas eliminar este registro?",
@@ -196,7 +195,7 @@ Tipo de Pago
         cancelButtonText: `No`
       }).then((result) => {
         if (result.isConfirmed) {
-          fetch(`/api/v1/tipodepago/${idTipodepago}`, {
+          fetch(`/api/v1/departamentos/${idDepartamento}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json'
@@ -214,7 +213,7 @@ Tipo de Pago
               Swal.fire(data.error);
             }
           }).catch(err => {
-            Swal.fire("Error", "Ocurrió un error al eliminar el tipo de pago.", "error");
+            Swal.fire("Error", "Ocurrió un error al eliminar el departamento.", "error");
           });
         }
       });
