@@ -7,14 +7,14 @@ from app.rutas.referenciales.ciudad.ciudad_routes import ciumod #ciudad
 from app.rutas.referenciales.paises.pais_routes import paimod   #pais
 from app.rutas.referenciales.nacionalidad.nacionalidad_routes import naciomod  #nacionalidad
 from app.rutas.referenciales.estado_civil.estado_civil_routes import estacivmod  #estado civil
-from app.rutas.referenciales.sexo.sexo_routes import sexmod  #sexo
+##from app.rutas.referenciales.sexo.sexo_routes import sexmod  #sexo
 from app.rutas.referenciales.persona.persona_routes import persmod  #persona
 from app.rutas.referenciales.dia.dia_routes import diamod  #dia
 from app.rutas.referenciales.turno.turno_routes import turmod  #turno
 from app.rutas.referenciales.horario.horario_routes import horamod #horario
 ##from app.rutas.referenciales.sucursal.sucursal_routes import sucurmod #sucursal
 from app.rutas.referenciales.profesional.profesional_routes import profmod #profesional
-from app.rutas.referenciales.tipodepago.tipodepago_routes import tippmod #tipodepago
+##from app.rutas.referenciales.tipodepago.tipodepago_routes import tippmod #tipodepago
 from app.rutas.referenciales.tipodeconsulta.tipodeconsulta_routes import tipcmod #tipodeconsulta
 from app.rutas.referenciales.cargo.cargo_routes import carmod #cargo 
 from app.rutas.referenciales.departamento.departamento_routes import depmod #cargo 
@@ -31,14 +31,14 @@ app.register_blueprint(ciumod, url_prefix=f'{modulo0}/ciudad') #ciudad
 app.register_blueprint(paimod, url_prefix=f'{modulo0}/paises') #pais
 app.register_blueprint(naciomod, url_prefix=f'{modulo0}/nacionalidad')  #nacionalidad
 app.register_blueprint(estacivmod, url_prefix=f'{modulo0}/estadocivil')  #estado civil
-app.register_blueprint(sexmod, url_prefix=f'{modulo0}/sexo')  #sexo
+##app.register_blueprint(sexmod, url_prefix=f'{modulo0}/sexo')  #sexo
 app.register_blueprint(persmod, url_prefix=f'{modulo0}/persona') #persona
 app.register_blueprint(diamod, url_prefix=f'{modulo0}/dia') #dia
 app.register_blueprint(turmod, url_prefix=f'{modulo0}/turno') #turno
 app.register_blueprint(horamod, url_prefix=f'{modulo0}/horario') 
 ##app.register_blueprint(sucurmod, url_prefix=f'{modulo0}/sucursal')
 app.register_blueprint(profmod, url_prefix=f'{modulo0}/profesional')
-app.register_blueprint(tippmod, url_prefix=f'{modulo0}/tipodepago')
+##app.register_blueprint(tippmod, url_prefix=f'{modulo0}/tipodepago')
 app.register_blueprint(tipcmod, url_prefix=f'{modulo0}/tipodeconsulta')
 app.register_blueprint(carmod, url_prefix=f'{modulo0}/cargo')
 app.register_blueprint(depmod, url_prefix=f'{modulo0}/departamento')
@@ -62,7 +62,7 @@ from app.rutas.referenciales.nacionalidad.nacionalidad_api import nacioapi
 from app.rutas.referenciales.estado_civil.estado_civil_api import estacivapi
 
 #sexo
-from app.rutas.referenciales.sexo.sexo_api import sexapi
+##from app.rutas.referenciales.sexo.sexo_api import sexapi
 
 #persona
 from app.rutas.referenciales.persona.persona_api import persapi
@@ -83,7 +83,7 @@ from app.rutas.referenciales.horario.horario_api import horaapi
 from app.rutas.referenciales.profesional.profesional_api import profapi
 
 #tipo de pago
-from app.rutas.referenciales.tipodepago.tipodepago_api import tippapi
+##from app.rutas.referenciales.tipodepago.tipodepago_api import tippapi
 
 #tipo de consulta
 from app.rutas.referenciales.tipodeconsulta.tipodeconsulta_api import tipcapi
@@ -94,7 +94,7 @@ from app.rutas.referenciales.cargo.cargo_api import carapi
 from app.rutas.referenciales.departamento.departamento_api import depapi
 
 
-from app.rutas.referenciales.sucursal.sucursal_api import sucurapi
+from app.rutas.referenciales.sucursal.sucursal_api import sucapi
 from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api \
     import pdcapi
 
@@ -118,8 +118,8 @@ version1 = '/api/v1'
 app.register_blueprint(estacivapi, url_prefix=version1)
 
 #sexo
-version1 = '/api/v1'
-app.register_blueprint(sexapi, url_prefix=version1)
+##version1 = '/api/v1'
+##app.register_blueprint(sexapi, url_prefix=version1)
 
 #persona
 version1 = '/api/v1'
@@ -147,8 +147,8 @@ version1 = '/api/v1'
 app.register_blueprint(profapi, url_prefix=version1)
 
 #Tipo de pago
-version1 = '/api/v1' 
-app.register_blueprint(tippapi, url_prefix=version1)
+##version1 = '/api/v1' 
+##app.register_blueprint(tippapi, url_prefix=version1)
 
 #tipo de consulta
 version1 = '/api/v1' 
@@ -166,7 +166,7 @@ app.register_blueprint(depapi, url_prefix=version1)
  # Gestionar compras API
 apiversion1 = '/api/v1'
 app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')
-app.register_blueprint(sucurapi, url_prefix=apiversion1)
+app.register_blueprint(sucapi, url_prefix=apiversion1)
 
 
 
