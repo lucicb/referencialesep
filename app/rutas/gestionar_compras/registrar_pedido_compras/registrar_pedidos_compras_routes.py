@@ -19,25 +19,23 @@ def pedidos_agregar():
     sdao = SucursalDao()
     empdao = EmpleadoDao()
     pdao = ProductoDao()
+    depodao = DepositoDao()
 
     # Obtener datos para los combos
     sucursales = sdao.get_sucursales()
     empleados = empdao.get_empleados()
     productos = pdao.get_productos()
+    depositos = depodao.get_depositos()
 
     # Renderizar el formulario con los datos
     return render_template(
         'pedidos-agregar.html',
         sucursales=sucursales,
         empleados=empleados,
-        productos=productos
+        productos=productos,
+        depositos=depositos
     )
-# En tu archivo de rutas (por ejemplo, deposito_routes.py o api_routes.py)
-@pdcmod.route('/get_depositos', methods=['GET'])
-def get_depositos():
-    deposito_dao = DepositoDao()  # Accede a la base de datos y obtiene los depósitos
-    depositos = deposito_dao.get_all_depositos()  # Método que obtiene todos los depósitos
-    return jsonify({'depositos': depositos})  # Retorna los depósitos en formato JSON
+ 
 
         
 

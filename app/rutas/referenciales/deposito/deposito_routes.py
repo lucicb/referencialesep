@@ -1,17 +1,15 @@
-# app/routes/depositos_routes.py
+# app/rutas/referenciales/deposito/deposito_routes.py
+from flask import Blueprint, render_template
 
-from flask import Blueprint, request, jsonify
-from app.dao.referenciales.deposito.deposito_dao import DepositoDao
+# Definir el Blueprint
+depomod = Blueprint('deposito', __name__, template_folder='templates')
 
-# Crear un Blueprint para las rutas de depósitos
-deposito_mod = Blueprint('deposito_mod', __name__)
+# Definir una ruta de ejemplo
+@depomod.route('/deposito-index')
+def depositoIndex():
+    return render_template('deposito-index.html')
 
-# Ruta para obtener los depósitos de una sucursal
-@pdcmod.route('/get_depositos', methods=['GET'])
-def get_depositos():
-    deposito_dao = DepositoDao()
-    depositos = deposito_dao.get_all_depositos()  # Aquí obtienes todos los depósitos
-    return jsonify({'depositos': depositos})  # Responde con los depósitos en formato JSON
+
 
 
 

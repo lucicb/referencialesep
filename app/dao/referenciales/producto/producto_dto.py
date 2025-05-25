@@ -1,5 +1,5 @@
 class ProductoDto:
-    
+
     def __init__(self, id_producto, nombre, \
         cantidad, precio_unitario):
         self.__id_producto = id_producto

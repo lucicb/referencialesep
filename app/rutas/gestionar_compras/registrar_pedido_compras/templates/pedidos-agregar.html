@@ -46,9 +46,12 @@ Formulario Pedido de Compras
           <!-- Combo depósito -->
           <div class="col-md-6">
             <div class="form-group">
-              <label for="cbo_deposito">Depósitos:</label>
+              <label for="cbo_deposito">Depositos:</label>
               <select id="cbo_deposito" name="deposito_id" class="custom-select" required>
-                <option value="">Seleccione un depósito</option>
+                <option value="">Seleccione un deposito</option>
+                {% for item in depositos %}
+                <option value="{{ item['id'] }}">{{ item['descripcion'] }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>
@@ -145,7 +148,7 @@ Formulario Pedido de Compras
   // Función para manejar los eventos
   function addEvents() {
     // Evento para cargar todos los depósitos
-    fetch('/get_depositos')  // Trae todos los depósitos desde la base de datos
+    fetch('/depositos')  // Trae todos los depósitos desde la base de datos
       .then(resp => resp.json())
       .then(data => {
         if (data.depositos && data.depositos.length > 0) {
