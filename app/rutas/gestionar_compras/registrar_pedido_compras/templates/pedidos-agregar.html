@@ -20,7 +20,7 @@ Formulario Pedido de Compras
               <select id="cbo_empleado" name="empleado_id" class="custom-select" required>
                 <option value="">Seleccione un empleado</option>
                 {% for item in empleados %}
-                <option value="{{ item['id_empleado'] }}">{{ item['empleado'] }} - CÉDULA: {{ item['ci'] }}</option>
+<option value="{{ item['id_empleado'] }}">{{ item['empleado'] }}</option>
                 {% endfor %}
               </select>
             </div>

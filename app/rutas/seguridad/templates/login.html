@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -40,10 +40,9 @@
                             <div class="col-lg-6">
                                 <div class="p-5">
                                     <div class="text-center">
-                                        <h1 class="h4 text-gray-900 mb-4">Welcome Back Aipo!</h1>
+                                        <h1 class="h4 text-gray-900 mb-4">Bienvenida a Sol & Suela</h1>
                                     </div>
                                     <form class="user" method="post" action="{{ url_for('login.login') }}">
-                                        <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" />
                                         <div class="form-group">
                                             <input type="text" class="form-control form-control-user"
                                                 name="usuario_nombre"
@@ -53,10 +52,10 @@
                                         <div class="form-group">
                                             <input type="password" class="form-control form-control-user"
                                                 name="usuario_clave"
-                                                placeholder="Password" required>
+                                                placeholder="Contraseña" required>
                                         </div>
 
-                                        <button type="submit" class="btn btn-primary btn-user btn-block">Eike</button>
+                                        <button type="submit" class="btn btn-primary btn-user btn-block">Ingresar</button>
                                         <hr>
                                     </form>
                                     <hr>

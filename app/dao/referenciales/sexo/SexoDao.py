@@ -8,7 +8,7 @@ class SexoDao:
 
         sexoSQL = """
         SELECT id, descripcion
-        FROM sexos
+        FROM sexo
         """
         # objeto conexion
         conexion = Conexion()

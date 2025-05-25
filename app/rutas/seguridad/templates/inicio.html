@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block titulo %}Inicio{% endblock %}
+
+{% block contenido %}
+<h1 class="h3 mb-4 text-gray-800">¡Bienvenido {{ session['nombre_persona'] }}!</h1>
+<p>Selecciona una opción del menú para comenzar.</p>
+{% endblock %}

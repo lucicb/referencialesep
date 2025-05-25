@@ -15,12 +15,12 @@ class LoginDao:
             , u.fun_id
             , u.gru_id
             , u.usu_estado
-            , CONCAT(p.nombres, ' ', p.apellidos)nombre_persona
+            , CONCAT(p.nombre, ' ', p.apellido)nombre_persona
             , g.gru_des grupo
         FROM
             usuarios u
         left join
-            personas p on p.id_persona = u.fun_id
+            personas p on p.id = u.fun_id
         left join
             grupos g ON g.gru_id = u.gru_id
         WHERE
