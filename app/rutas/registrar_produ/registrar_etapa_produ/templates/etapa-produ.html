@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block titulo %}Etapas de Producción{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Etapas de Producción</h1>
+
+    <button class="btn btn-primary mb-3"
+            onclick="window.location.href='{{ url_for('epmod.etapa_produccion_form') }}'">
+        + Nueva Etapa
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <table id="tblEtapaProdu" class="table table-striped table-bordered" width="100%">
+                <thead>
+                    <tr>
+                        <th>Código Orden</th>
+                        <th>Producto</th>
+                        <th>Sucursal</th>
+                        <th>Fecha</th>
+                        <th>Cantidad Planificada</th>
+                        <th>Estado</th>
+                        <th>Usuario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(function () {
+
+    $('#tblEtapaProdu').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: "/api/v1/etapa-produccion",
+            type: "GET",
+            dataSrc: ""
+        },
+        columns: [
+            { data: "cod_orden_prod_cab" },
+            { data: "producto" },
+            { data: "sucursal" },
+            { data: "fecha" },
+            { data: "cantidad_planificada" },
+            { data: "estado" },
+            { data: "usuario.usu_nick", defaultContent: "" },
+            {
+                data: null,
+                render: function (data) {
+                    return `
+                        <a href="/produccion/etapa/editar/${data.id_etapa_cab}"
+                           class="btn btn-warning btn-sm">Editar</a>
+
+                        <button class="btn btn-danger btn-sm"
+                                onclick="anularEtapa(${data.id_etapa_cab})">
+                                Anular
+                        </button>
+                    `;
+                }
+            }
+        ]
+    });
+
+});
+
+// ==========================
+// ANULAR ETAPA
+// ==========================
+function anularEtapa(id) {
+
+    if (!confirm("¿Desea anular esta etapa?")) return;
+
+    $.ajax({
+        url: `/api/v1/etapa-produccion/${id}/anular`,
+        type: "PUT",
+        success: function () {
+            alert("Etapa anulada correctamente");
+            $('#tblEtapaProdu').DataTable().ajax.reload();
+        },
+        error: function () {
+            alert("Error al anular");
+        }
+    });
+}
+
+</script>
+{% endblock %}

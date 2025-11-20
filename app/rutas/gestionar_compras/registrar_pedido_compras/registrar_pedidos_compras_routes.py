@@ -1,41 +1,71 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, current_app as app
 from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
-from app.dao.referenciales.empleado.empleado_dao import EmpleadoDao
-from app.dao.referenciales.producto.producto_dao import ProductoDao
-from app.dao.referenciales.deposito.deposito_dao import DepositoDao  # Importar DepositoDao
+from app.dao.referenciales.funcionario.funcionario_dao import FuncionarioDao
+from app.dao.referenciales.producto.ProductoDao import ProductoDao
+from app.dao.gestionar_compras.registrar_pedido_compras.pedido_de_compras_dao import PedidoDeComprasDao
+from app.dao.referenciales.proveedor.ProveedorDao import ProveedorDao
 
-# Crear el blueprint
 pdcmod = Blueprint('pdcmod', __name__, template_folder='templates')
 
-# Ruta al índice de pedidos
+
+# ==============================
+# Vista de listado de pedidos
+# ==============================
 @pdcmod.route('/pedidos-index')
 def pedidos_index():
-    return render_template('pedidos-index.html')
+    dao = PedidoDeComprasDao() 
+    pedidos = dao.obtener_pedidos()
+    return render_template('pedidos-index.html', pedidos=pedidos)
 
-# Ruta para mostrar el formulario de creación de pedidos
+
+# ==============================
+# Vista para agregar un pedido
+# ==============================
 @pdcmod.route('/pedidos-agregar')
 def pedidos_agregar():
-    # Instanciar DAOs
+    # Instanciamos los DAOs
     sdao = SucursalDao()
-    empdao = EmpleadoDao()
+    empdao = FuncionarioDao()
     pdao = ProductoDao()
-    depodao = DepositoDao()
+    provdao = ProveedorDao()
 
-    # Obtener datos para los combos
+    # Listas referenciales para los selects
     sucursales = sdao.get_sucursales()
-    empleados = empdao.get_empleados()
+    funcionarios = empdao.get_funcionarios()
+    proveedores = provdao.getProveedores()
     productos = pdao.get_productos()
-    depositos = depodao.get_depositos()
 
-    # Renderizar el formulario con los datos
+    # Renderizamos la plantilla
     return render_template(
         'pedidos-agregar.html',
         sucursales=sucursales,
-        empleados=empleados,
-        productos=productos,
-        depositos=depositos
+        funcionarios=funcionarios,
+        proveedores=proveedores,
+        productos=productos
     )
- 
 
-        
 
+# ==============================
+# Endpoint para obtener proveedores vía AJAX
+# ==============================
+@pdcmod.route('/proveedores', methods=['GET'])
+def get_proveedores():
+    try:
+        dao = ProveedorDao()
+        proveedores = dao.getProveedores()
+        return jsonify({'success': True, 'data': proveedores, 'error': None}), 200
+    except Exception as e:
+        app.logger.error(f"Error al obtener proveedores: {str(e)}")
+        return jsonify({'success': False, 'error': 'Ocurrió un error interno.'}), 500
+
+
+# ==============================
+# Vista para ver detalle de un pedido
+# ==============================
+@pdcmod.route('/pedidos/detalle/<int:id_pedido>')
+def pedidos_detalle(id_pedido):
+    dao = PedidoDeComprasDao()
+    pedido = dao.obtener_pedido_por_id(id_pedido)  # Debe traer el diccionario completo con detalle
+    if not pedido:
+        return "Pedido no encontrado", 404
+    return render_template('detalle.html', pedido=pedido)

@@ -22,7 +22,7 @@ class Conexion:
             )
 
         except psycopg2.OperationalError as e:
-            print("❌ Error de conexión a la base de datos:")
+            print(" Error de conexión a la base de datos:")
             print(str(e))
             self.con = None  # Opcional: establecer como None para evitar errores posteriores
 

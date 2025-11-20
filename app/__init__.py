@@ -1,8 +1,10 @@
 from datetime import timedelta
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect()
 
 app = Flask(__name__)
-
+csrf.init_app(app)
 # Inicializar secret key
 app.secret_key = b'_5#y2L"F6Q7z\n\xec]'
 
@@ -54,8 +56,8 @@ app.register_blueprint(depmod, url_prefix=f'{modulo0}/departamento')  # departam
 app.register_blueprint(depomod, url_prefix=f'{modulo0}/deposito')  # deposito
 
 # Registrar las rutas de gestionar compras
-modulo1 = '/gestionar-compras'
-app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')  # registrar pedidos compras
+#modulo1 = '/gestionar-compras'
+#app.register_blueprint(pdcmod, url_prefix=f'{modulo1}/registrar-pedido-compras')  # registrar pedidos compras
 
 # Registrar las APIs
 from app.rutas.referenciales.ciudad.ciudad_api import ciuapi
@@ -75,10 +77,12 @@ from app.rutas.referenciales.cargo.cargo_api import carapi
 from app.rutas.referenciales.departamento.departamento_api import depapi
 from app.rutas.referenciales.deposito.deposito_api import depoapi
 from app.rutas.referenciales.sucursal.sucursal_api import sucapi
-from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api import pdcapi
+#from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api import pdcapi
 
 # Registrar las APIs v1
 version1 = '/api/v1'
+api_v1 = '/api/v1'
+
 app.register_blueprint(ciuapi, url_prefix=f'{version1}/ciudad')  # ciudad
 app.register_blueprint(paisapi, url_prefix=f'{version1}/paises')  # pais
 app.register_blueprint(nacioapi, url_prefix=f'{version1}/nacionalidad')  # nacionalidad
@@ -97,11 +101,145 @@ app.register_blueprint(depapi, url_prefix=f'{version1}/departamento')  # departa
 app.register_blueprint(depoapi, url_prefix=f'{version1}/deposito')
 
 # Gestionar compras API
-apiversion1 = '/api/v1'
-app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')  # registrar pedidos compras
-app.register_blueprint(sucapi, url_prefix=f'{apiversion1}/sucursal')  # sucursal
+#apiversion1 = '/api/v1'
+#app.register_blueprint(pdcapi, url_prefix=f'{apiversion1}/{modulo1}/registrar-pedido-compras')  # registrar pedidos compras
+app.register_blueprint(sucapi, url_prefix=f'{version1}/sucursal')  # sucursal
 
-  # deposito
+ # ================================
+# Gestionar Compras - Rutas
+# ================================
+modulo_compras = '/gestionar-compras'
+
+from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedidos_compras_routes import pdcmod
+from app.rutas.gestionar_compras.registrar_solicitud_compras.registrar_solicitud_compras_routes import solmod
+from app.rutas.gestionar_compras.registrar_presupuesto.registrar_presupuesto_routes import presumod
+from app.rutas.gestionar_compras.registrar_recepcion_compras.recepcion_mercaderia_routes import rm_mod
+
+app.register_blueprint(pdcmod, url_prefix=f'{modulo_compras}/registrar-pedido-compras')
+app.register_blueprint(solmod, url_prefix=f'{modulo_compras}/registrar-solicitud-compras')
+app.register_blueprint(presumod, url_prefix=f'{modulo_compras}/registrar-presupuesto')
+app.register_blueprint(rm_mod, url_prefix=f'{modulo_compras}/registrar-recepcion-compras')
+
+# ================================
+# Gestionar Compras - APIs
+# ================================
+from app.rutas.gestionar_compras.registrar_pedido_compras.registrar_pedido_compras_api import pdcapi
+from app.rutas.gestionar_compras.registrar_solicitud_compras.registrar_solicitud_compras_api import scapi
+from app.rutas.gestionar_compras.registrar_presupuesto.registrar_presupuesto_api import presuapi
+from app.rutas.gestionar_compras.registrar_recepcion_compras.recepcion_mercaderia_api import rm_api
+
+app.register_blueprint(pdcapi, url_prefix=f'{api_v1}{modulo_compras}/registrar-pedido-compras')
+app.register_blueprint(scapi, url_prefix=f'{api_v1}{modulo_compras}/registrar-solicitud-compras')
+app.register_blueprint(presuapi, url_prefix=f'{api_v1}{modulo_compras}/registrar-presupuesto')
+# Exento CSRF porque recibe JSON desde AJAX
+app.register_blueprint(rm_api, url_prefix=f'{api_v1}{modulo_compras}/recepcion-mercaderias')
+csrf.exempt(pdcapi)
+csrf.exempt(scapi)
+csrf.exempt(presuapi)
+csrf.exempt(rm_api)
+
+
+# ================================
+# Orden de Producción - Rutas y APIs
+# ================================
+from app.rutas.registrar_produ.registrar_orden_produ.orden_produccion_routes import opmod
+from app.rutas.registrar_produ.registrar_orden_produ.orden_produccion_api import opapi
+
+
+modulo_produccion = '/produccion'
+
+# Rutas HTML
+app.register_blueprint(opmod, url_prefix='/produccion/registrar-orden')
+
+# APIs
+app.register_blueprint(opapi, url_prefix=f'{api_v1}/orden-produccion')
+
+# Exentos CSRF
+csrf.exempt(opmod)
+csrf.exempt(opapi)
+
+# ================================
+# Etapa de Producción - Rutas y APIs
+# ================================
+from app.rutas.registrar_produ.registrar_etapa_produ.etapa_produ_routes import epmod
+from app.rutas.registrar_produ.registrar_etapa_produ.etapa_produ_api import epapi
+
+modulo_etapa = '/produccion'
+
+# Rutas HTML
+app.register_blueprint(epmod, url_prefix='/produccion/registrar-etapa')
+
+# APIs
+app.register_blueprint(epapi, url_prefix=f'{api_v1}/etapa-produccion')
+
+# Exentos CSRF
+csrf.exempt(epmod)
+csrf.exempt(epapi)
+
+
+
+
+# ================================
+# Pedido de Materia Prima - Rutas y APIs
+# ================================
+from app.rutas.registrar_produ.registrar_pedido_mp.pedido_mp_routes import pmpmod
+from app.rutas.registrar_produ.registrar_pedido_mp.pedido_mp_api import pmpapi
+
+modulo_produccion = '/produccion'
+
+# Rutas HTML
+app.register_blueprint(pmpmod, url_prefix='/produccion/pedido-mp')
+
+# APIs
+app.register_blueprint(pmpapi, url_prefix=f'{api_v1}/pedido-mp')
+
+# Exentos CSRF
+csrf.exempt(pmpmod)
+csrf.exempt(pmpapi)
+
+
+
+# ================================
+# Cierre - Rutas y APIs
+# ================================
+from app.rutas.referenciales.apertura.apertura_routes import apermod
+from app.rutas.referenciales.apertura.apertura_api import aperapi
+
+app.register_blueprint(apermod, url_prefix=f'{modulo0}/apertura')  
+app.register_blueprint(aperapi, url_prefix=f'{api_v1}')
+
+
+
+from app.rutas.referenciales.cierre.cierre_routes import cierremod
+from app.rutas.referenciales.cierre.cierre_api import cierreapi
+
+app.register_blueprint(cierreapi, url_prefix=api_v1)
+app.register_blueprint(cierremod, url_prefix=f'{modulo0}/cierre')
+
+
+
+
+
+
+csrf.exempt(logmod)
+csrf.exempt(ciumod)
+csrf.exempt(paimod)
+csrf.exempt(naciomod)
+csrf.exempt(estacivmod)
+csrf.exempt(persmod)
+csrf.exempt(diamod)
+csrf.exempt(turmod)
+csrf.exempt(horamod)
+csrf.exempt(profmod)
+csrf.exempt(tipcmod)
+csrf.exempt(carmod)
+csrf.exempt(depmod)
+csrf.exempt(depomod)
+csrf.exempt(pdcmod)
+csrf.exempt(solmod)
+csrf.exempt(presumod)
+csrf.exempt(rm_mod)
+csrf.exempt(cierremod)
 
 if __name__ == '__main__':
     app.run(debug=True)

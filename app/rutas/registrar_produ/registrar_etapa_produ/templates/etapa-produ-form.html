@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block titulo %}Etapa de Producción{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">
+        {{ 'Editar Etapa' if etapa else 'Nueva Etapa de Producción' }}
+    </h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <form id="formEtapaProdu">
+                <input type="hidden" id="id_etapa_cab" value="{{ etapa.id_etapa_cab if etapa else '' }}">
+
+                <!-- CABECERA -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Orden de Producción</label>
+                        <select id="cod_orden_prod_cab" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for op in ordenes_produccion %}
+                                <option value="{{ op.cod_orden_prod_cab }}"
+                                    {% if etapa and etapa.cod_orden_prod_cab == op.cod_orden_prod_cab %}selected{% endif %}>
+                                    {{ op.cod_orden_prod_cab }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Producto</label>
+                        <select id="id_producto" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for p in productos %}
+                                <option value="{{ p.id_producto }}"
+                                    {% if etapa and etapa.id_producto == p.id_producto %}selected{% endif %}>
+                                    {{ p.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Sucursal</label>
+                        <select id="id_suc" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for s in sucursales %}
+                                <option value="{{ s.id }}"
+                                    {% if etapa and etapa.id_suc == s.id %}selected{% endif %}>
+                                    {{ s.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Fecha</label>
+                        <input type="date" id="fecha" class="form-control" value="{{ etapa.fecha if etapa else '' }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Cantidad Planificada</label>
+                        <input type="number" id="cantidad_planificada" class="form-control" step="1" min="1"
+                               value="{{ etapa.cantidad_planificada if etapa else '' }}" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Estado</label>
+                        <select id="estado" class="form-control" required>
+                            <option value="pendiente" {% if etapa and etapa.estado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                            <option value="en proceso" {% if etapa and etapa.estado == 'en proceso' %}selected{% endif %}>En Proceso</option>
+                            <option value="terminado" {% if etapa and etapa.estado == 'terminado' %}selected{% endif %}>Terminado</option>
+                            <option value="cancelado" {% if etapa and etapa.estado == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Observaciones</label>
+                        <textarea id="observaciones" class="form-control">{{ etapa.observaciones if etapa else '' }}</textarea>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- DETALLE -->
+                <h5>Detalle de Etapas</h5>
+                <button type="button" class="btn btn-success btn-sm mb-3" onclick="agregarFila()">+ Agregar Etapa</button>
+
+                <div id="detalleContainer"></div>
+
+                <hr>
+                <button type="button" onclick="guardar()" class="btn btn-primary">Guardar Etapa</button>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let etapasDisponibles = [
+    "ARMADO DE CAPELLADA",
+    "PREPARACIÓN DE SUELA",
+    "PEGADO",
+    "COSTURA",
+    "MONTAJE",
+    "PRENSADO / VULCANIZADO",
+    "CONTROL DE CALIDAD",
+    "ACABADO"
+];
+
+function agregarFila(data = null) {
+    let etapaSel = data?.etapa ?? "";
+    let descripcion = data?.descripcion ?? "";
+    let responsable = data?.responsable ?? "";
+    let fecha_inicio = data?.fecha_inicio ?? "";
+    let fecha_fin = data?.fecha_fin ?? "";
+    let estado = data?.estado ?? "Pendiente";
+    let avance = data?.avance ?? "";
+
+    let bloque = document.createElement("div");
+    bloque.classList.add("card", "mb-3", "p-3", "shadow-sm");
+
+    bloque.innerHTML = `
+        <div class="row">
+            <div class="col-md-4">
+                <label>Etapa</label>
+                <select class="form-control etapa">
+                    <option value="">Seleccione etapa...</option>
+                    ${etapasDisponibles.map(e => `<option value="${e}" ${e === etapaSel ? "selected" : ""}>${e}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Descripción</label>
+                <textarea class="form-control descripcion" rows="2" placeholder="Ingrese una descripción clara...">${descripcion}</textarea>
+            </div>
+            <div class="col-md-4">
+                <label>Responsable</label>
+                <input type="text" class="form-control responsable" value="${responsable}" placeholder="Responsable">
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-2">
+                <label>Inicio</label>
+                <input type="datetime-local" class="form-control fecha_inicio_det" value="${fecha_inicio}">
+            </div>
+            <div class="col-md-2">
+                <label>Fin</label>
+                <input type="datetime-local" class="form-control fecha_fin_det" value="${fecha_fin}">
+            </div>
+            <div class="col-md-2">
+                <label>Estado</label>
+                <select class="form-control estado_det">
+                    <option ${estado === "Pendiente" ? "selected" : ""}>Pendiente</option>
+                    <option ${estado === "En Proceso" ? "selected" : ""}>En Proceso</option>
+                    <option ${estado === "Terminado" ? "selected" : ""}>Terminado</option>
+                    <option ${estado === "Cancelado" ? "selected" : ""}>Cancelado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Avance</label>
+                <input type="text" class="form-control avance" value="${avance}" placeholder="Ej: 50%">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("detalleContainer").appendChild(bloque);
+}
+
+function eliminarFila(btn) {
+    btn.closest(".card").remove();
+}
+
+// Cargar detalle existente
+{% if etapa and etapa.detalle %}
+    {% for d in etapa.detalle %}
+        agregarFila({
+            etapa: "{{ d.etapa }}",
+            descripcion: "{{ d.descripcion }}",
+            responsable: "{{ d.responsable }}",
+            fecha_inicio: "{{ d.fecha_inicio }}",
+            fecha_fin: "{{ d.fecha_fin }}",
+            estado: "{{ d.estado }}",
+            avance: "{{ d.avance }}"
+        });
+    {% endfor %}
+{% endif %}
+
+// Guardar
+async function obtenerCsrfToken() {
+    let res = await fetch('/api/v1/etapa-produccion/csrf-token');
+    let data = await res.json();
+    return data.csrf_token;
+}
+
+async function guardar() {
+    let detalle = [];
+    document.querySelectorAll("#detalleContainer .card").forEach(bloque => {
+        detalle.push({
+            etapa: bloque.querySelector(".etapa").value,
+            descripcion: bloque.querySelector(".descripcion").value,
+            responsable: bloque.querySelector(".responsable").value,
+            fecha_inicio: bloque.querySelector(".fecha_inicio_det").value,
+            fecha_fin: bloque.querySelector(".fecha_fin_det").value,
+            estado: bloque.querySelector(".estado_det").value,
+            avance: bloque.querySelector(".avance").value
+        });
+    });
+
+    let payload = {
+        cod_orden_prod_cab: document.getElementById("cod_orden_prod_cab").value,
+        id_producto: document.getElementById("id_producto").value,
+        id_suc: document.getElementById("id_suc").value,
+        fecha: document.getElementById("fecha").value,
+        cantidad_planificada: parseInt(document.getElementById("cantidad_planificada").value),
+        estado: document.getElementById("estado").value,
+        observaciones: document.getElementById("observaciones").value,
+        fecha_fin: document.getElementById("fecha_fin").value,
+        detalle
+    };
+
+    let csrf_token = await obtenerCsrfToken();
+
+    $.ajax({
+        url: "/api/v1/etapa-produccion",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "X-CSRFToken": csrf_token },
+        data: JSON.stringify(payload),
+        success: function() {
+            Swal.fire('Éxito', 'Etapa guardada correctamente', 'success');
+        },
+        error: function(err) {
+            Swal.fire('Error', 'No se pudo guardar', 'error');
+            console.log(err);
+        }
+    });
+}
+</script>
+{% endblock %}
