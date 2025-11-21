@@ -1,196 +1,209 @@
 from flask import current_app as app
 from app.conexion.Conexion import Conexion
 
-class OrdenProduccionDao:
 
-    def obtener_ordenes(self):
+class ControlCalidadDao:
+
+    # ===========================================================
+    # OBTENER TODAS LAS CABECERAS DE CONTROL DE CALIDAD
+    # ===========================================================
+    def obtener_todos(self):
         sql = """
         SELECT 
-            op.cod_orden_prod_cab,
-            op.fecha_creacion,
-            op.fecha_inicio,
-            op.fecha_fin_estimada,
-            op.fecha_fin_real,
-            op.estado,
-            p.nombre AS producto,
-            s.descripcion AS sucursal,
-            u.usu_id,
+            c.id_cali_cab,
+            c.cod_orden_prod_cab,
+            c.fecha_control,
+            c.responsable,
+            c.resultado,
+            c.observaciones,
+            c.estado,
+            c.usu_id,
+
             u.usu_nick,
-            u.usu_clave,
-            u.usu_nro_intentos,
-            u.fun_id,
-            u.gru_id,
             u.usu_estado
-        FROM orden_produccion_cab op
-        LEFT JOIN productos p ON p.id_producto = op.id_producto
-        LEFT JOIN sucursales s ON s.id = op.id_suc
-        LEFT JOIN usuarios u ON u.usu_id = op.usu_id
-        ORDER BY op.cod_orden_prod_cab DESC
+        FROM control_calidad_cab c
+        LEFT JOIN usuarios u ON u.usu_id = c.usu_id
+        ORDER BY c.id_cali_cab DESC
         """
+
         try:
             with Conexion().getConexion() as con:
                 with con.cursor() as cur:
                     cur.execute(sql)
                     filas = cur.fetchall()
-                    datos = []
 
+                    datos = []
                     for f in filas:
                         datos.append({
-                            "cod_orden_prod_cab": f[0],
-                            "fecha_creacion": f[1],
-                            "fecha_inicio": f[2],
-                            "fecha_fin_estimada": f[3],
-                            "fecha_fin_real": f[4],
-                            "estado": f[5],
-                            "producto": f[6],
-                            "sucursal": f[7],
+                            "id_cali_cab": f[0],
+                            "cod_orden_prod_cab": f[1],
+                            "fecha_control": f[2],
+                            "responsable": f[3],
+                            "resultado": f[4],
+                            "observaciones": f[5],
+                            "estado": f[6],
                             "usuario": {
-                                "usu_id": f[8],
-                                "usu_nick": f[9],
-                                "usu_clave": f[10],
-                                "usu_nro_intentos": f[11],
-                                "fun_id": f[12],
-                                "gru_id": f[13],
-                                "usu_estado": f[14]
+                                "usu_id": f[7],
+                                "usu_nick": f[8],
+                                "usu_estado": f[9]
                             }
                         })
+
                     return datos
+
         except Exception as e:
-            app.logger.error("Error al obtener órdenes de producción: " + str(e))
+            app.logger.error("Error al obtener controles de calidad: " + str(e))
             return []
 
-    def obtener_por_id(self, cod_orden):
+    # ===========================================================
+    # OBTENER UN CONTROL DE CALIDAD POR ID (CAB + DETALLE)
+    # ===========================================================
+    def obtener_por_id(self, id_cab):
         try:
             with Conexion().getConexion() as con:
                 with con.cursor() as cur:
+
+                    # ---------- CABECERA ----------
                     cur.execute("""
                         SELECT 
-                            op.cod_orden_prod_cab,
-                            op.fecha_creacion,
-                            op.fecha_inicio,
-                            op.fecha_fin_estimada,
-                            op.fecha_fin_real,
-                            op.estado,
-                            op.id_producto,
-                            op.id_suc,
-                            u.usu_id,
+                            c.id_cali_cab,
+                            c.cod_orden_prod_cab,
+                            c.fecha_control,
+                            c.responsable,
+                            c.resultado,
+                            c.observaciones,
+                            c.estado,
+                            c.usu_id,
+
                             u.usu_nick,
-                            u.usu_clave,
-                            u.usu_nro_intentos,
-                            u.fun_id,
-                            u.gru_id,
                             u.usu_estado
-                        FROM orden_produccion_cab op
-                        LEFT JOIN usuarios u ON u.usu_id = op.usu_id
-                        WHERE op.cod_orden_prod_cab = %s
-                    """, (cod_orden,))
+                        FROM control_calidad_cab c
+                        LEFT JOIN usuarios u ON u.usu_id = c.usu_id
+                        WHERE c.id_cali_cab = %s
+                    """, (id_cab,))
+
                     cab = cur.fetchone()
                     if not cab:
                         return None
 
-                    orden = {
-                        "cod_orden_prod_cab": cab[0],
-                        "fecha_creacion": cab[1],
-                        "fecha_inicio": cab[2],
-                        "fecha_fin_estimada": cab[3],
-                        "fecha_fin_real": cab[4],
-                        "estado": cab[5],
-                        "id_producto": cab[6],
-                        "id_sucursal": cab[7],
+                    control = {
+                        "id_cali_cab": cab[0],
+                        "cod_orden_prod_cab": cab[1],
+                        "fecha_control": cab[2],
+                        "responsable": cab[3],
+                        "resultado": cab[4],
+                        "observaciones": cab[5],
+                        "estado": cab[6],
                         "usuario": {
-                            "usu_id": cab[8],
-                            "usu_nick": cab[9],
-                            "usu_clave": cab[10],
-                            "usu_nro_intentos": cab[11],
-                            "fun_id": cab[12],
-                            "gru_id": cab[13],
-                            "usu_estado": cab[14]
+                            "usu_id": cab[7],
+                            "usu_nick": cab[8],
+                            "usu_estado": cab[9]
                         },
                         "detalle": []
                     }
 
+                    # ---------- DETALLE ----------
                     cur.execute("""
                         SELECT 
-                            cod_orden_prod_det,
-                            cantidad,
-                            costo_unitario,
-                            id_producto
-                        FROM orden_produccion_det
-                        WHERE cod_orden_prod_cab = %s
-                        ORDER BY cod_orden_prod_det
-                    """, (cod_orden,))
-                    detalle = cur.fetchall()
-                    for d in detalle:
-                        orden["detalle"].append({
-                            "cod_det": d[0],
-                            "cantidad": float(d[1]),
-                            "costo_unitario": float(d[2]),
-                            "id_producto": d[3]
+                            id_cali_det,
+                            valor_esperado,
+                            valor_obtenido,
+                            resultado,
+                            observaciones
+                        FROM control_calidad_det
+                        WHERE id_cali_cab = %s
+                        ORDER BY id_cali_det
+                    """, (id_cab,))
+
+                    dets = cur.fetchall()
+                    for d in dets:
+                        control["detalle"].append({
+                            "id_cali_det": d[0],
+                            "valor_esperado": d[1],
+                            "valor_obtenido": d[2],
+                            "resultado": d[3],
+                            "observaciones": d[4]
                         })
 
-                    return orden
+                    return control
+
         except Exception as e:
-            app.logger.error("Error al obtener la orden por ID: " + str(e))
+            app.logger.error("Error al obtener control de calidad por ID: " + str(e))
             return None
 
+    # ===========================================================
+    # AGREGAR CONTROL DE CALIDAD (CAB + DETALLE)
+    # ===========================================================
     def agregar(self, cab_dto):
         try:
             with Conexion().getConexion() as con:
                 con.autocommit = False
                 with con.cursor() as cur:
-                    # Insertar cabecera
+                    
+                    # Insertar CABECERA
                     sql_cab = """
-                    INSERT INTO orden_produccion_cab
-                    (fecha_inicio, fecha_fin_estimada, id_producto, id_suc, usu_id)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING cod_orden_prod_cab
+                    INSERT INTO control_calidad_cab
+                    (cod_orden_prod_cab, fecha_control, responsable, resultado, observaciones, estado, usu_id)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id_cali_cab
                     """
+
                     cur.execute(sql_cab, (
-                        cab_dto.fecha_inicio,
-                        cab_dto.fecha_fin_estimada,
-                        cab_dto.id_producto,
-                        cab_dto.id_suc,
+                        cab_dto.cod_orden_prod_cab,
+                        cab_dto.fecha_control,
+                        cab_dto.responsable,
+                        cab_dto.resultado,
+                        cab_dto.observaciones,
+                        cab_dto.estado,
                         cab_dto.usu_id
                     ))
-                    cod_cab = cur.fetchone()[0]
 
-                    # Insertar detalles
+                    id_cab = cur.fetchone()[0]
+
+                    # Insertar DETALLE
                     sql_det = """
-                    INSERT INTO orden_produccion_det
-                    (cod_orden_prod_cab, cantidad, costo_unitario, id_producto)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO control_calidad_det
+                    (id_cali_cab, valor_esperado, valor_obtenido, resultado, observaciones)
+                    VALUES (%s, %s, %s, %s, %s)
                     """
+
                     for det in cab_dto.detalle:
                         cur.execute(sql_det, (
-                            cod_cab,
-                            det.cantidad,
-                            det.costo_unitario,
-                            det.id_producto
+                            id_cab,
+                            det.valor_esperado,
+                            det.valor_obtenido,
+                            det.resultado,
+                            det.observaciones
                         ))
 
                     con.commit()
                     return True
+
         except Exception as e:
-            app.logger.error(f"Error al registrar orden: {e}", exc_info=True)
+            app.logger.error(f"Error al registrar control de calidad: {e}", exc_info=True)
             try:
                 con.rollback()
             except:
                 pass
             return False
 
-    def cambiar_estado(self, cod_orden, nuevo_estado):
+    # ===========================================================
+    # CAMBIAR ESTADO
+    # ===========================================================
+    def cambiar_estado(self, id_cab, nuevo_estado):
         try:
             with Conexion().getConexion() as con:
                 with con.cursor() as cur:
                     cur.execute("""
-                        UPDATE orden_produccion_cab
+                        UPDATE control_calidad_cab
                         SET estado = %s
-                        WHERE cod_orden_prod_cab = %s
-                    """, (nuevo_estado, cod_orden))
+                        WHERE id_cali_cab = %s
+                    """, (nuevo_estado, id_cab))
                     con.commit()
                     return True
+
         except Exception as e:
-            app.logger.error(f"Error al cambiar estado de la orden: {e}", exc_info=True)
+            app.logger.error(f"Error al cambiar estado del control de calidad: {e}", exc_info=True)
             try:
                 con.rollback()
             except:

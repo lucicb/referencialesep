@@ -1,30 +1,30 @@
 {% extends "base.html" %}
 
-{% block titulo %}Orden de Producción{% endblock %}
+{% block titulo %}Registro de Mermas{% endblock %}
 
 {% block contenido %}
 <div class="container-fluid">
 
-    <h1 class="h3 mb-4 text-gray-800">Órdenes de Producción</h1>
+    <h1 class="h3 mb-4 text-gray-800">Mermas Registradas</h1>
 
     <button class="btn btn-primary mb-3"
-            onclick="window.location.href='{{ url_for('opmod.orden_produccion_form') }}'">
-        + Nueva Orden
+            onclick="window.location.href='{{ url_for('mermod.mermas_form') }}'">
+        + Nueva Merma
     </button>
 
     <div class="card shadow">
         <div class="card-body">
 
-            <table id="tblOrdenProduccion" class="table table-striped table-bordered" width="100%">
+            <table id="tblMermas" class="table table-striped table-bordered" width="100%">
                 <thead>
                     <tr>
                         <th>Código</th>
-                        <th>Producto</th>
+                        <th>Orden Prod.</th>
+                        <th>Producto Principal</th>
                         <th>Sucursal</th>
-                        <th>Fecha Inicio</th>
-                        <th>Fecha Estimada</th>
-                        <th>Estado</th>
-                        <th>Usuario</th>
+                        <th>Fecha Registro</th>
+                        <th>Responsable</th>
+                        <th>Motivo General</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -40,33 +40,31 @@
 <script>
 $(document).ready(function () {
 
-    $('#tblOrdenProduccion').DataTable({
+    $('#tblMermas').DataTable({
         processing: true,
         serverSide: false,
         ajax: {
-            url: "/api/v1/orden-produccion",
+            url: "/api/v1/mermas",
             type: "GET",
             dataSrc: ""
         },
         columns: [
+            { data: "id_merma_cab" },
             { data: "cod_orden_prod_cab" },
             { data: "producto" },
             { data: "sucursal" },
-            { data: "fecha_inicio" },
-            { data: "fecha_fin_estimada" },
-            { data: "estado" },
-            {  data: "usuario.usu_nick",
-             defaultContent: ""
-            },
+            { data: "fecha_registro" },
+            { data: "responsable" },
+            { data: "motivo_general" },
             {
                 data: null,
                 render: function (data) {
                     return `
-                        <a href="/produccion/orden/editar/${data.cod_orden_prod_cab}"
+                        <a href="/produccion/mermas/form/${data.id_merma_cab}"
                            class="btn btn-warning btn-sm">Editar</a>
 
                         <button class="btn btn-danger btn-sm"
-                                onclick="anularOrden(${data.cod_orden_prod_cab})">
+                                onclick="anularMerma(${data.id_merma_cab})">
                                 Anular
                         </button>
                     `;
@@ -78,21 +76,21 @@ $(document).ready(function () {
 });
 
 // ==========================
-// ANULAR ORDEN
+// ANULAR MERMA
 // ==========================
-function anularOrden(id) {
+function anularMerma(id) {
 
-    if (!confirm("¿Desea anular esta orden?")) return;
+    if (!confirm("¿Desea anular esta merma?")) return;
 
     $.ajax({
-        url: `/api/v1/orden-produccion/${id}/anular`,
+        url: `/api/v1/mermas/${id}/anular`,
         type: "PUT",
         success: function () {
-            alert("Orden anulada correctamente");
-            $('#tblOrdenProduccion').DataTable().ajax.reload();
+            alert("Merma anulada correctamente");
+            $('#tblMermas').DataTable().ajax.reload();
         },
         error: function () {
-            alert("Error al anular");
+            alert("Error al anular la merma");
         }
     });
 }

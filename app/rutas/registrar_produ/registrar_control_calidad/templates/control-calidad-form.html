@@ -1,126 +1,161 @@
 {% extends "base.html" %}
 
-{% block titulo %}Orden de Producción{% endblock %}
+{% block titulo %}Control de Calidad{% endblock %}
 
 {% block contenido %}
 <div class="container-fluid">
 
     <h1 class="h3 mb-4 text-gray-800">
-        {{ 'Editar Orden' if orden else 'Nueva Orden de Producción' }}
+        {{ 'Editar Control de Calidad' if cabecera else 'Nuevo Control de Calidad' }}
     </h1>
 
     <div class="card shadow">
         <div class="card-body">
 
-            <form id="formOrdenProduccion">
-                <input type="hidden" id="cod_orden_prod_cab"
-                       value="{{ orden.cod_orden_prod_cab if orden else '' }}">
+            <!-- FORMULARIO -->
+            <form id="formControlCalidad">
 
+                <input type="hidden" id="id_cali_cab"
+                       value="{{ cabecera.id_cali_cab if cabecera else '' }}">
+
+                <!-- =====================
+                     CABECERA
+                ====================== -->
                 <div class="row">
-                    <!-- Producto -->
+
+                    <!-- Orden Producción -->
                     <div class="col-md-4">
-                        <label>Producto a producir</label>
-                        <select id="id_producto" class="form-control" required>
+                        <label>Orden de Producción</label>
+                        <select id="cod_orden_prod_cab" class="form-control" required>
                             <option value="">Seleccione...</option>
-                            {% for p in productos %}
-                                <option value="{{ p.id_producto }}"
-                                    {% if orden and orden.id_producto == p.id_producto %}selected{% endif %}>
-                                    {{ p.nombre }}
+                            {% for o in ordenes %}
+                                <option value="{{ o.cod_orden_prod_cab }}"
+                                    {% if cabecera and cabecera.cod_orden_prod_cab == o.cod_orden_prod_cab %}selected{% endif %}>
+                                    {{ o.cod_orden_prod_cab }} - {{ o.producto }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- Sucursal -->
+                    <!-- Fecha del control -->
                     <div class="col-md-4">
-                        <label>Sucursal</label>
-                        <select id="id_suc" class="form-control" required>
-                            <option value="">Seleccione...</option>
-                            {% for s in sucursales %}
-                                <option value="{{ s.id }}"
-                                    {% if orden and orden.id_suc == s.id %}selected{% endif %}>
-                                    {{ s.descripcion }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                        <label>Fecha Control</label>
+                        <input type="datetime-local" id="fecha_control"
+                               class="form-control"
+                               value="{{ cabecera.fecha_control if cabecera else '' }}"
+                               required>
                     </div>
 
-                    <!-- Funcionario -->
+                    <!-- Responsable -->
                     <div class="col-md-4">
-                        <label>Funcionario</label>
+                        <label>Responsable</label>
                         <select id="usu_id" class="form-control" required>
                             <option value="">Seleccione...</option>
                             {% for f in funcionarios %}
                                 <option value="{{ f.usu_id }}"
-                                    {% if orden and orden.usu_id == f.usu_id %}selected{% endif %}>
+                                    {% if cabecera and cabecera.usu_id == f.usu_id %}selected{% endif %}>
                                     {{ f.usu_nick }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
+
                 </div>
 
                 <br>
 
                 <div class="row">
-                    <!-- Fecha Inicio -->
+
+                    <!-- Resultado -->
                     <div class="col-md-4">
-                        <label>Fecha Inicio</label>
-                        <input type="date" id="fecha_inicio"
-                               class="form-control"
-                               value="{{ orden.fecha_inicio if orden else '' }}"
-                               required>
+                        <label>Resultado</label>
+                        <select id="resultado" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="APROBADO"
+                                {% if cabecera and cabecera.resultado == 'APROBADO' %}selected{% endif %}>
+                                Aprobado
+                            </option>
+                            <option value="RECHAZADO"
+                                {% if cabecera and cabecera.resultado == 'RECHAZADO' %}selected{% endif %}>
+                                Rechazado
+                            </option>
+                            <option value="OBSERVADO"
+                                {% if cabecera and cabecera.resultado == 'OBSERVADO' %}selected{% endif %}>
+                                Observado
+                            </option>
+                        </select>
                     </div>
 
-                    <!-- Fecha Fin Estimada -->
+                    <!-- Estado -->
                     <div class="col-md-4">
-                        <label>Fecha Fin Estimada</label>
-                        <input type="date" id="fecha_fin_estimada"
-                               class="form-control"
-                               value="{{ orden.fecha_fin_estimada if orden else '' }}"
-                               required>
+                        <label>Estado</label>
+                        <select id="estado" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="ACTIVO"
+                                {% if cabecera and cabecera.estado == 'ACTIVO' %}selected{% endif %}>Activo</option>
+                            <option value="INACTIVO"
+                                {% if cabecera and cabecera.estado == 'INACTIVO' %}selected{% endif %}>Inactivo</option>
+                        </select>
                     </div>
+
+                    <!-- Observaciones -->
+                    <div class="col-md-4">
+                        <label>Observaciones</label>
+                        <input type="text" id="observaciones" class="form-control"
+                               value="{{ cabecera.observaciones if cabecera else '' }}">
+                    </div>
+
                 </div>
 
                 <hr>
 
-                <h5>Materiales / Componentes</h5>
-                <button type="button" class="btn btn-success btn-sm mb-2" onclick="agregarFila()">+ Agregar Material</button>
+                <!-- =====================
+                     DETALLE
+                ====================== -->
+                <h5>Detalle del Control</h5>
+                <button type="button" class="btn btn-success btn-sm mb-2" onclick="agregarFila()">
+                    + Agregar Ítem
+                </button>
 
                 <table class="table table-bordered" id="tblDetalle">
-                    <thead>
+                    <thead class="thead-light">
                         <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Costo Unitario</th>
+                            <th>Valor Esperado</th>
+                            <th>Valor Obtenido</th>
+                            <th>Resultado</th>
+                            <th>Observaciones</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if orden and orden.detalle %}
-                            {% for d in orden.detalle %}
+
+                        {% if cabecera and cabecera.detalle %}
+                            {% for d in cabecera.detalle %}
                             <tr>
+                                <td><input class="form-control valor_esperado" value="{{ d.valor_esperado }}" required></td>
+                                <td><input class="form-control valor_obtenido" value="{{ d.valor_obtenido }}" required></td>
                                 <td>
-                                    <select class="form-control id_producto_det" required>
-                                        {% for p in productos %}
-                                            <option value="{{ p.id_producto }}"
-                                                {% if d.id_producto == p.id_producto %}selected{% endif %}>
-                                                {{ p.nombre }}
-                                            </option>
-                                        {% endfor %}
+                                    <select class="form-control resultado_det">
+                                        <option value="APROBADO" {% if d.resultado == 'APROBADO' %}selected{% endif %}>Aprobado</option>
+                                        <option value="RECHAZADO" {% if d.resultado == 'RECHAZADO' %}selected{% endif %}>Rechazado</option>
+                                        <option value="OBSERVADO" {% if d.resultado == 'OBSERVADO' %}selected{% endif %}>Observado</option>
                                     </select>
                                 </td>
-                                <td><input type="number" class="form-control cantidad" step="0.01" min="0" value="{{ d.cantidad }}" required></td>
-                                <td><input type="number" class="form-control costo" step="0.01" min="0" value="{{ d.costo_unitario }}" required></td>
+                                <td><input class="form-control observaciones_det" value="{{ d.observaciones }}"></td>
                                 <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
                             </tr>
                             {% endfor %}
                         {% endif %}
+
                     </tbody>
                 </table>
 
                 <hr>
-                <button type="button" onclick="guardar()" class="btn btn-primary">Guardar Orden</button>
+
+                <button type="button" onclick="guardar()" class="btn btn-primary">
+                    Guardar Control
+                </button>
+
             </form>
 
         </div>
@@ -131,25 +166,22 @@
 
 {% block js %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-// ====================
-// Variables JS
-// ====================
-let productosData = JSON.parse('{{ productos|tojson|safe }}');
-let sucursalesData = JSON.parse('{{ sucursales|tojson|safe }}');
-let funcionariosData = JSON.parse('{{ funcionarios|tojson|safe }}');
 
 function agregarFila() {
-    let options = productosData.map(p => `<option value="${p.id_producto}">${p.nombre}</option>`).join('');
     let fila = `
         <tr>
+            <td><input class="form-control valor_esperado" required></td>
+            <td><input class="form-control valor_obtenido" required></td>
             <td>
-                <select class="form-control id_producto_det" required>
-                    ${options}
+                <select class="form-control resultado_det">
+                    <option value="APROBADO">Aprobado</option>
+                    <option value="RECHAZADO">Rechazado</option>
+                    <option value="OBSERVADO">Observado</option>
                 </select>
             </td>
-            <td><input type="number" class="form-control cantidad" step="0.01" min="0" required></td>
-            <td><input type="number" class="form-control costo" step="0.01" min="0" required></td>
+            <td><input class="form-control observaciones_det"></td>
             <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
         </tr>
     `;
@@ -160,69 +192,48 @@ function eliminarFila(btn) {
     $(btn).closest('tr').remove();
 }
 
-async function obtenerCsrfToken() {
-    try {
-        let res = await fetch('/api/v1/orden-produccion/csrf-token');
-        let data = await res.json();
-        return data.csrf_token;
-    } catch (err) {
-        console.error("Error obteniendo CSRF token:", err);
-        return null;
-    }
-}
-
 async function guardar() {
+
     let detalle = [];
     $('#tblDetalle tbody tr').each(function() {
-        let id_producto = $(this).find('.id_producto_det').val();
-        let cantidad = parseFloat($(this).find('.cantidad').val());
-        let costo = parseFloat($(this).find('.costo').val());
-        if(id_producto && !isNaN(cantidad) && !isNaN(costo)) {
-            detalle.push({id_producto: parseInt(id_producto), cantidad, costo_unitario: costo});
-        }
+        detalle.push({
+            valor_esperado: $(this).find('.valor_esperado').val(),
+            valor_obtenido: $(this).find('.valor_obtenido').val(),
+            resultado: $(this).find('.resultado_det').val(),
+            observaciones: $(this).find('.observaciones_det').val(),
+        });
     });
 
     if(detalle.length === 0){
-        Swal.fire('Error', "Debe agregar al menos un material válido", 'error');
+        Swal.fire('Error', "Debe agregar al menos un ítem de control", 'error');
         return;
     }
 
-    let id_producto = parseInt($('#id_producto').val());
-    let id_suc = parseInt($('#id_suc').val());
-    let usu_id = parseInt($('#usu_id').val());
-    let fecha_inicio = $('#fecha_inicio').val();
-    let fecha_fin_estimada = $('#fecha_fin_estimada').val();
-
-    if (!id_producto || !id_suc || !usu_id || !fecha_inicio || !fecha_fin_estimada) {
-        Swal.fire('Error', "Todos los campos de la cabecera son obligatorios", 'error');
-        return;
-    }
-
-    let payload = {id_producto, id_suc, usu_id, fecha_inicio, fecha_fin_estimada, detalle};
-    let csrf_token = await obtenerCsrfToken();
-    if (!csrf_token) {
-        Swal.fire('Error', "No se pudo obtener CSRF token", 'error');
-        return;
-    }
+    let payload = {
+        id_cali_cab: $('#id_cali_cab').val(),
+        cod_orden_prod_cab: $('#cod_orden_prod_cab').val(),
+        fecha_control: $('#fecha_control').val(),
+        responsable: $('#usu_id').val(),
+        resultado: $('#resultado').val(),
+        observaciones: $('#observaciones').val(),
+        estado: $('#estado').val(),
+        detalle: detalle
+    };
 
     $.ajax({
-        url: "/api/v1/orden-produccion",
+        url: "/api/v1/control-calidad",
         type: "POST",
         contentType: "application/json",
-        headers: { "X-CSRFToken": csrf_token },
         data: JSON.stringify(payload),
         success: function() {
-            Swal.fire('Éxito', 'Orden guardada correctamente', 'success').then(() => {
-                // Limpiar campos
-                $('#formOrdenProduccion')[0].reset();
-                $('#tblDetalle tbody').empty();
-            });
+            Swal.fire('Éxito', 'Control de Calidad guardado correctamente', 'success')
         },
         error: function(err) {
-            Swal.fire('Error', "Error al guardar. Revisa la consola", 'error');
-            console.log(err.responseJSON || err);
+            console.log(err);
+            Swal.fire('Error', 'Ocurrió un error al guardar', 'error');
         }
     });
 }
+
 </script>
 {% endblock %}

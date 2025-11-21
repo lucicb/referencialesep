@@ -1,123 +1,171 @@
 from flask import Blueprint, jsonify, request
 from flask_wtf.csrf import generate_csrf
 from datetime import datetime
-from app.dao.registrar_produ.registrar_orden_produ.orden_produ_dao import OrdenProduccionDao
-from app.dao.registrar_produ.registrar_orden_produ.dto.orden_produccion_cab_dto import OrdenProduccionCabDto
-from app.dao.registrar_produ.registrar_orden_produ.dto.orden_produccion_det_dto import OrdenProduccionDetDto
 
-opapi = Blueprint('opapi', __name__)
-dao = OrdenProduccionDao()
+from app.dao.registrar_produ.registrar_control_calidad.control_calidad_dao import ControlCalidadDao
+from app.dao.registrar_produ.registrar_control_calidad.dto.control_calidad_cab_dto import ControlCalidadCabDto
+from app.dao.registrar_produ.registrar_control_calidad.dto.control_calidad_det_dto import ControlCalidadDetDto
+
+ccapi = Blueprint('ccapi', __name__)
+dao = ControlCalidadDao()
 
 # ===============================
-# Endpoint para obtener CSRF token
+# Obtener CSRF token
 # ===============================
-@opapi.route('/csrf-token', methods=['GET'])
+@ccapi.route('/csrf-token', methods=['GET'])
 def csrf_token():
     token = generate_csrf()
     return jsonify({"csrf_token": token}), 200
 
-# ============================================================
-# LISTAR TODAS LAS ÓRDENES
-# ============================================================
-@opapi.route('', methods=['GET'])
+
+# ===============================
+# LISTAR TODOS
+# ===============================
+@ccapi.route('', methods=['GET'])
 def listar():
     try:
-        ordenes = dao.obtener_ordenes()
-        return jsonify(ordenes), 200
+        datos = dao.obtener_todos()
+        return jsonify(datos), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ============================================================
-# OBTENER UNA ORDEN POR ID
-# ============================================================
-@opapi.route('/<int:id>', methods=['GET'])
+
+# ===============================
+# OBTENER POR ID
+# ===============================
+@ccapi.route('/<int:id>', methods=['GET'])
 def obtener(id):
     try:
-        orden = dao.obtener_por_id(id)
-        if orden:
-            return jsonify(orden), 200
+        dato = dao.obtener_por_id(id)
+        if dato:
+            return jsonify(dato), 200
         else:
-            return jsonify({"error": "Orden no encontrada"}), 404
+            return jsonify({"error": "Registro no encontrado"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ============================================================
-# Función auxiliar para parsear fechas
-# ============================================================
+
+# ===============================
+# Validar y convertir fecha
+# ===============================
 def parse_fecha(fecha_str, campo):
     try:
-        return datetime.strptime(fecha_str, "%Y-%m-%d").date()
-    except ValueError:
-        raise ValueError(f"Formato de fecha inválido en {campo}, se espera YYYY-MM-DD")
+        return datetime.strptime(fecha_str, "%Y-%m-%d %H:%M").strftime("%Y-%m-%d %H:%M")
+    except:
+        raise ValueError(f"Formato inválido en {campo}. Use YYYY-MM-DD HH:MM")
 
-# ============================================================
-# CREAR O ACTUALIZAR UNA ORDEN DE PRODUCCIÓN
-# ============================================================
-@opapi.route('', methods=['POST'])
+
+# ===============================
+# CREAR REGISTRO
+# ===============================
+@ccapi.route('', methods=['POST'])
 def crear():
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "No se recibió data"}), 400
 
-        # Validar campos obligatorios
-        required_fields = ["id_producto", "id_suc", "usu_id", "detalle", "fecha_inicio", "fecha_fin_estimada"]
-        for field in required_fields:
-            if field not in data or data[field] in [None, ""]:
-                return jsonify({"error": f"Falta campo obligatorio: {field}"}), 400
+        # =======================
+        # VALIDAR CAMPOS
+        # =======================
+        required = ["cod_orden_prod_cab", "fecha_control", "responsable", "resultado", "estado", "usu_id"]
+        for r in required:
+            if r not in data or data[r] in ["", None]:
+                return jsonify({"error": f"Falta campo obligatorio: {r}"}), 400
 
-        # -----------------------------
+        # =======================
         # DETALLE
-        # -----------------------------
+        # =======================
         detalle = []
         for idx, d in enumerate(data.get("detalle", [])):
             try:
-                id_producto = int(d["id_producto"])
-                cantidad = float(d["cantidad"])
-                costo_unitario = float(d["costo_unitario"])
-                detalle.append(OrdenProduccionDetDto(
-                    id_producto=id_producto,
-                    cantidad=cantidad,
-                    costo_unitario=costo_unitario
-                ))
-            except (ValueError, KeyError) as ex:
-                return jsonify({"error": f"Detalle inválido en la fila {idx+1}: {str(ex)}"}), 400
+                det = ControlCalidadDetDto(
+                    valor_esperado=d["valor_esperado"],
+                    valor_obtenido=d["valor_obtenido"],
+                    resultado=d["resultado"],
+                    observaciones=d.get("observaciones", "")
+                )
+                detalle.append(det)
+            except Exception as ex:
+                return jsonify({"error": f"Detalle inválido en fila {idx+1}: {ex}"}), 400
 
-        if not detalle:
-            return jsonify({"error": "Debe agregar al menos un detalle válido"}), 400
+        # =======================
+        # CABECERA
+        # =======================
+        fecha_control = data["fecha_control"]
 
-        # -----------------------------
-        # CABECERA con validación de fechas
-        # -----------------------------
-        try:
-            fecha_inicio = parse_fecha(data["fecha_inicio"], "fecha_inicio")
-            fecha_fin_estimada = parse_fecha(data["fecha_fin_estimada"], "fecha_fin_estimada")
+        cab = ControlCalidadCabDto(
+            cod_orden_prod_cab=int(data["cod_orden_prod_cab"]),
+            fecha_control=fecha_control,
+            responsable=data["responsable"],
+            resultado=data["resultado"],
+            observaciones=data.get("observaciones", ""),
+            estado=data["estado"],
+            usu_id=int(data["usu_id"]),
+            detalle=detalle
+        )
 
-            cab = OrdenProduccionCabDto(
-                fecha_inicio=fecha_inicio,
-                fecha_fin_estimada=fecha_fin_estimada,
-                id_producto=int(data["id_producto"]),
-                id_suc=int(data["id_suc"]),
-                usu_id=int(data["usu_id"]),
-                detalle=detalle
-            )
-        except ValueError as ex:
-            return jsonify({"error": f"Error en la cabecera: {str(ex)}"}), 400
-
-        # Guardar en BD
         ok = dao.agregar(cab)
         return jsonify({"success": ok}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ============================================================
-# ANULAR UNA ORDEN
-# ============================================================
-@opapi.route('/<int:id>/anular', methods=['PUT'])
-def anular(id):
+
+# ===============================
+# ACTUALIZAR REGISTRO
+# ===============================
+@ccapi.route('/<int:id>', methods=['PUT'])
+def actualizar(id):
     try:
-        ok = dao.cambiar_estado(id, "ANULADO")
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No se recibió data"}), 400
+
+        # Validar
+        required = ["cod_orden_prod_cab", "fecha_control", "responsable", "resultado", "estado", "usu_id"]
+        for r in required:
+            if r not in data or data[r] in ["", None]:
+                return jsonify({"error": f"Falta campo obligatorio: {r}"}), 400
+
+        # Detalle
+        detalle = []
+        for idx, d in enumerate(data.get("detalle", [])):
+            det = ControlCalidadDetDto(
+                valor_esperado=d["valor_esperado"],
+                valor_obtenido=d["valor_obtenido"],
+                resultado=d["resultado"],
+                observaciones=d.get("observaciones", ""),
+                id_cali_det=d.get("id_cali_det")
+            )
+            detalle.append(det)
+
+        cab = ControlCalidadCabDto(
+            cod_orden_prod_cab=int(data["cod_orden_prod_cab"]),
+            fecha_control=data["fecha_control"],
+            responsable=data["responsable"],
+            resultado=data["resultado"],
+            observaciones=data.get("observaciones", ""),
+            estado=data["estado"],
+            usu_id=int(data["usu_id"]),
+            detalle=detalle,
+            id_cali_cab=id
+        )
+
+        ok = dao.actualizar(cab)
+        return jsonify({"success": ok}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ===============================
+# ELIMINAR
+# ===============================
+@ccapi.route('/<int:id>', methods=['DELETE'])
+def eliminar(id):
+    try:
+        ok = dao.eliminar(id)
         return jsonify({"success": ok}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

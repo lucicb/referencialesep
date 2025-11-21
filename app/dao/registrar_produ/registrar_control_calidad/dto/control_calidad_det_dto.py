@@ -1,23 +1,33 @@
-# orden_produccion_det_dto.py
-
-class OrdenProduccionDetDto:
+class ControlCalidadDetDto:
     """
-    DTO para el detalle de la orden de producción.
+    DTO para el detalle del Control de Calidad.
     """
 
-    def __init__(self, id_producto, cantidad, costo_unitario, cod_orden_prod_det=None):
-        self.cod_orden_prod_det = cod_orden_prod_det  # opcional, se asigna después de insertar en BD
-        self.id_producto = id_producto
-        self.cantidad = cantidad
-        self.costo_unitario = costo_unitario
+    def __init__(
+        self,
+        valor_esperado,
+        valor_obtenido,
+        resultado,
+        observaciones,
+        id_cali_det=None
+    ):
+        # ID que se genera en BD (opcional)
+        self.id_cali_det = id_cali_det
+
+        # Campos de la tabla control_calidad_det
+        self.valor_esperado = valor_esperado
+        self.valor_obtenido = valor_obtenido
+        self.resultado = resultado
+        self.observaciones = observaciones
 
     def to_dict(self):
         """
-        Retorna la representación como diccionario, útil para jsonify.
+        Retorna la representación como diccionario.
         """
         return {
-            "cod_orden_prod_det": self.cod_orden_prod_det,
-            "id_producto": self.id_producto,
-            "cantidad": float(self.cantidad),
-            "costo_unitario": float(self.costo_unitario)
+            "id_cali_det": self.id_cali_det,
+            "valor_esperado": self.valor_esperado,
+            "valor_obtenido": self.valor_obtenido,
+            "resultado": self.resultado,
+            "observaciones": self.observaciones
         }

@@ -1,43 +1,43 @@
 from flask import Blueprint, jsonify, request
 from flask_wtf.csrf import generate_csrf
 from datetime import datetime
-from app.dao.registrar_produ.registrar_orden_produ.orden_produ_dao import OrdenProduccionDao
-from app.dao.registrar_produ.registrar_orden_produ.dto.orden_produccion_cab_dto import OrdenProduccionCabDto
-from app.dao.registrar_produ.registrar_orden_produ.dto.orden_produccion_det_dto import OrdenProduccionDetDto
+from app.dao.registrar_produ.registrar_mermas.mermas_dao import MermasDao
+from app.dao.registrar_produ.registrar_mermas.dto.mermas_cab_dto import MermasCabDto
+from app.dao.registrar_produ.registrar_mermas.dto.mermas_det_dto import MermasDetDto
 
-opapi = Blueprint('opapi', __name__)
-dao = OrdenProduccionDao()
+merapi = Blueprint('merapi', __name__)
+dao = MermasDao()
 
 # ===============================
 # Endpoint para obtener CSRF token
 # ===============================
-@opapi.route('/csrf-token', methods=['GET'])
+@merapi.route('/csrf-token', methods=['GET'])
 def csrf_token():
     token = generate_csrf()
     return jsonify({"csrf_token": token}), 200
 
 # ============================================================
-# LISTAR TODAS LAS ÓRDENES
+# LISTAR TODAS LAS MERMAS
 # ============================================================
-@opapi.route('', methods=['GET'])
+@merapi.route('', methods=['GET'])
 def listar():
     try:
-        ordenes = dao.obtener_ordenes()
-        return jsonify(ordenes), 200
+        mermas = dao.obtener_mermas()
+        return jsonify(mermas), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # ============================================================
-# OBTENER UNA ORDEN POR ID
+# OBTENER UNA MERMA POR ID
 # ============================================================
-@opapi.route('/<int:id>', methods=['GET'])
+@merapi.route('/<int:id>', methods=['GET'])
 def obtener(id):
     try:
-        orden = dao.obtener_por_id(id)
-        if orden:
-            return jsonify(orden), 200
+        merma = dao.obtener_por_id(id)
+        if merma:
+            return jsonify(merma), 200
         else:
-            return jsonify({"error": "Orden no encontrada"}), 404
+            return jsonify({"error": "Merma no encontrada"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -51,9 +51,9 @@ def parse_fecha(fecha_str, campo):
         raise ValueError(f"Formato de fecha inválido en {campo}, se espera YYYY-MM-DD")
 
 # ============================================================
-# CREAR O ACTUALIZAR UNA ORDEN DE PRODUCCIÓN
+# CREAR O ACTUALIZAR MERMA
 # ============================================================
-@opapi.route('', methods=['POST'])
+@merapi.route('', methods=['POST'])
 def crear():
     try:
         data = request.get_json()
@@ -61,7 +61,7 @@ def crear():
             return jsonify({"error": "No se recibió data"}), 400
 
         # Validar campos obligatorios
-        required_fields = ["id_producto", "id_suc", "usu_id", "detalle", "fecha_inicio", "fecha_fin_estimada"]
+        required_fields = ["cod_orden_prod_cab", "suc_id", "usu_id", "detalle", "fecha_registro", "responsable"]
         for field in required_fields:
             if field not in data or data[field] in [None, ""]:
                 return jsonify({"error": f"Falta campo obligatorio: {field}"}), 400
@@ -74,11 +74,13 @@ def crear():
             try:
                 id_producto = int(d["id_producto"])
                 cantidad = float(d["cantidad"])
-                costo_unitario = float(d["costo_unitario"])
-                detalle.append(OrdenProduccionDetDto(
+                costo_unitario = float(d.get("costo_unitario", 0))
+                motivo = d.get("motivo", "")
+                detalle.append(MermasDetDto(
                     id_producto=id_producto,
                     cantidad=cantidad,
-                    costo_unitario=costo_unitario
+                    costo_unitario=costo_unitario,
+                    motivo=motivo
                 ))
             except (ValueError, KeyError) as ex:
                 return jsonify({"error": f"Detalle inválido en la fila {idx+1}: {str(ex)}"}), 400
@@ -87,18 +89,18 @@ def crear():
             return jsonify({"error": "Debe agregar al menos un detalle válido"}), 400
 
         # -----------------------------
-        # CABECERA con validación de fechas
+        # CABECERA con validación de fecha
         # -----------------------------
         try:
-            fecha_inicio = parse_fecha(data["fecha_inicio"], "fecha_inicio")
-            fecha_fin_estimada = parse_fecha(data["fecha_fin_estimada"], "fecha_fin_estimada")
-
-            cab = OrdenProduccionCabDto(
-                fecha_inicio=fecha_inicio,
-                fecha_fin_estimada=fecha_fin_estimada,
-                id_producto=int(data["id_producto"]),
-                id_suc=int(data["id_suc"]),
+            fecha_registro = parse_fecha(data["fecha_registro"], "fecha_registro")
+            cab = MermasCabDto(
+                cod_orden_prod_cab=int(data["cod_orden_prod_cab"]),
+                suc_id=int(data["suc_id"]),
                 usu_id=int(data["usu_id"]),
+                fecha_registro=fecha_registro,
+                responsable=data["responsable"],
+                motivo_general=data.get("motivo_general", ""),
+                observaciones=data.get("observaciones", ""),
                 detalle=detalle
             )
         except ValueError as ex:
@@ -112,9 +114,9 @@ def crear():
         return jsonify({"error": str(e)}), 500
 
 # ============================================================
-# ANULAR UNA ORDEN
+# ANULAR UNA MERMA
 # ============================================================
-@opapi.route('/<int:id>/anular', methods=['PUT'])
+@merapi.route('/<int:id>/anular', methods=['PUT'])
 def anular(id):
     try:
         ok = dao.cambiar_estado(id, "ANULADO")

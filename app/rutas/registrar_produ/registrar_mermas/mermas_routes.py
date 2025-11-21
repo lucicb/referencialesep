@@ -1,30 +1,35 @@
 from flask import Blueprint, render_template, request
-from app.dao.registrar_produ.registrar_orden_produ.orden_produ_dao import OrdenProduccionDao
+from app.dao.registrar_produ.registrar_mermas.mermas_dao import MermasDao
 from app.dao.referenciales.producto.ProductoDao import ProductoDao
 from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
 from app.dao.referenciales.usuario.login_dao import LoginDao
+from app.dao.registrar_produ.registrar_orden_produ.orden_produ_dao import OrdenProduccionDao
 
-opmod = Blueprint('opmod', __name__, template_folder='templates')
+mermod = Blueprint('mermod', __name__, template_folder='templates')
 
 # DAOs
-dao = OrdenProduccionDao()
-productoDao = ProductoDao()
+dao = MermasDao()              # DAO de mermas
+productoDao = ProductoDao()     
 sucursalDao = SucursalDao()
-loginDao = LoginDao()  # <-- LoginDao para traer funcionarios
+loginDao = LoginDao()
+ordenDao = OrdenProduccionDao() # Para obtener info de la orden de producción asociada
 
 # ================================
 # LISTADO HTML
 # ================================
-@opmod.route('/orden')
-def orden_produccion_index():
-    return render_template('orden-produccion.html')
+@mermod.route('/mermas')
+def mermas_index():
+    return render_template('registrar-mermas.html')
 
 # ================================
-# FORM – NUEVO O EDITAR
+# FORM – NUEVO O EDITAR MERMA
 # ================================
-@opmod.route('/orden/form', defaults={'id': None})
-@opmod.route('/orden/form/<int:id>')
-def orden_produccion_form(id):
+@mermod.route('/mermas/form', defaults={'id': None})
+@mermod.route('/mermas/form/<int:id>')
+def mermas_form(id):
+
+    # Obtener órdenes de producción (para seleccionar a cuál pertenece la merma)
+    ordenes = ordenDao.obtener_ordenes()
 
     # Obtener productos
     productos = productoDao.get_productos()
@@ -34,18 +39,17 @@ def orden_produccion_form(id):
     sucursales = sucursalDao.get_sucursales()
 
     # Obtener todos los usuarios/funcionarios activos
-    # Aquí suponemos que existe un método que traiga todos los usuarios
-    # Si LoginDao no tiene, podemos crear uno: get_usuarios()
-    funcionarios = loginDao.get_usuarios()  # <-- Método que retorna lista de diccionarios
-    funcionarios_dict = [f for f in funcionarios]  # Ya vienen como diccionarios
+    funcionarios = loginDao.get_usuarios()
+    funcionarios_dict = [f for f in funcionarios]
 
-    # Obtener orden si se pasa un ID
-    orden = dao.obtener_por_id(id) if id else None
+    # Obtener merma si se pasa un ID
+    merma = dao.obtener_por_id(id) if id else None
 
     return render_template(
-        'orden-produccion-form.html',
+        'registrar-mermas-form.html',
+        ordenes=ordenes,
         productos=productos_dict,
         sucursales=sucursales,
-        funcionarios=funcionarios_dict,  # enviamos todos los funcionarios
-        orden=orden
+        funcionarios=funcionarios_dict,
+        merma=merma
     )

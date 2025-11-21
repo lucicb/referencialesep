@@ -158,6 +158,43 @@ app.register_blueprint(opapi, url_prefix=f'{api_v1}/orden-produccion')
 csrf.exempt(opmod)
 csrf.exempt(opapi)
 
+
+# ================================
+# Control de Calidad - Rutas y APIs
+# ================================
+from app.rutas.registrar_produ.registrar_control_calidad.control_calidad_routes import ccmod
+from app.rutas.registrar_produ.registrar_control_calidad.control_calidad_api import ccapi
+
+# Rutas HTML
+app.register_blueprint(ccmod, url_prefix='/produccion/registrar-control-calidad')
+
+# APIs
+app.register_blueprint(ccapi, url_prefix=f'{api_v1}/control-calidad')
+
+# Exentos CSRF
+csrf.exempt(ccmod)
+csrf.exempt(ccapi)
+
+# ================================
+# Registro de Mermas - Rutas y APIs
+# ================================
+from app.rutas.registrar_produ.registrar_mermas.mermas_routes import mermod
+from app.rutas.registrar_produ.registrar_mermas.mermas_api import merapi
+
+# Rutas HTML
+app.register_blueprint(mermod, url_prefix='/produccion/registrar-mermas')
+
+# APIs
+app.register_blueprint(merapi, url_prefix=f'{api_v1}/mermas')
+
+# Exentos CSRF
+csrf.exempt(mermod)
+csrf.exempt(merapi)
+
+
+
+
+
 # ================================
 # Etapa de Producción - Rutas y APIs
 # ================================
