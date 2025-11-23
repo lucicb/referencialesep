@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block titulo %}Apertura / Cierre de Caja{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">
+        {{ 'Cerrar Caja' if apertura else 'Abrir Caja' }}
+    </h1>
+
+    <div class="card shadow" style="max-width:600px; margin:auto;">
+        <div class="card-body">
+
+            <form id="formAperturaCierre">
+
+                <!-- Fila superior: Nro de Caja y Fecha Apertura -->
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nro de Caja</label>
+                        <input type="text" id="id_caja_cab" class="form-control" 
+                            value="{{ apertura.id_caja_cab if apertura else proximo_id }}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Fecha Apertura</label>
+                        <input type="text" id="fecha_apertura" class="form-control"
+                            value="{{ apertura.fecha_apertura if apertura else fecha_hoy }}" readonly>
+                    </div>
+                </div>
+
+                <!-- Sucursal y Funcionario -->
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Sucursal</label>
+                        <select id="id_suc" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for s in sucursales %}
+                                <option value="{{ s.id }}" {% if apertura and apertura.id_suc == s.id %}selected{% endif %}>
+                                    {{ s.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Funcionario</label>
+                        <select id="usu_id" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for f in funcionarios %}
+                                <option value="{{ f.usu_id }}" {% if apertura and apertura.usu_id == f.usu_id %}selected{% endif %}>
+                                    {{ f.usu_nick }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Monto Inicial / Final -->
+                <div class="form-group">
+                    <label>{{ 'Monto Final' if apertura and apertura.estado=='ABIERTO' else 'Monto Inicial' }}</label>
+                    <input type="number" id="monto" class="form-control" step="0.01" min="0"
+                        value="{{ apertura.monto_final if apertura and apertura.estado=='ABIERTO' else '' }}" 
+                        {% if apertura and apertura.estado=='CERRADO' %}readonly{% endif %} required>
+                </div>
+
+                <!-- Botón de acción -->
+                <div class="text-right">
+                    <button type="button" class="btn btn-primary btn-block" id="btnAccion">
+                        {{ 'Cerrar Caja' if apertura and apertura.estado=='ABIERTO' else 'Abrir Caja' }}
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+async function obtenerCsrfToken() {
+    try {
+        let res = await fetch('/api/v1/apertura-cierre/csrf-token');
+        let data = await res.json();
+        return data.csrf_token;
+    } catch (err) {
+        console.error("Error obteniendo CSRF token:", err);
+        return null;
+    }
+}
+
+$('#btnAccion').click(async function() {
+    let id_caja_cab = $('#id_caja_cab').val();
+    let id_suc = $('#id_suc').val();
+    let usu_id = $('#usu_id').val();
+    let monto = parseFloat($('#monto').val());
+
+    if(!id_suc || !usu_id || !monto){
+        Swal.fire('Error', 'Todos los campos son obligatorios', 'error');
+        return;
+    }
+
+    let payload = {
+        id_caja_cab,
+        id_suc,
+        usu_id,
+        monto
+    };
+
+    let csrf_token = await obtenerCsrfToken();
+    if(!csrf_token) return;
+
+    let url = "/api/v1/apertura-cierre";
+    let metodo = "POST";
+
+    {% if apertura and apertura.estado=='ABIERTO' %}
+        url += `/cerrar/${id_caja_cab}`;
+        metodo = "PUT";
+    {% endif %}
+
+    $.ajax({
+        url: url,
+        type: metodo,
+        contentType: "application/json",
+        headers: { "X-CSRFToken": csrf_token },
+        data: JSON.stringify(payload),
+        success: function() {
+            Swal.fire('Éxito', 'Operación realizada correctamente', 'success').then(() => {
+                window.location.href = "/apertura-cierre";
+            });
+        },
+        error: function(err){
+            Swal.fire('Error', 'Ocurrió un error', 'error');
+            console.log(err.responseJSON || err);
+        }
+    });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block titulo %}Pedidos de Materia Prima{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Pedidos de Materia Prima</h1>
+
+    <button class="btn btn-primary mb-3"
+            onclick="window.location.href='{{ url_for('pmpmod.pedido_mp_form') }}'">
+        + Nuevo Pedido
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <table id="tblPedidoMp" class="table table-striped table-bordered" width="100%">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Materia Prima</th>
+                        <th>Sucursal</th>
+                        <th>Fecha Pedido</th>
+                        <th>Fecha Estimada</th>
+                        <th>Estado</th>
+                        <th>Funcionario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(function () {
+
+    $('#tblPedidoMp').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: "/api/v1/pedido-mp",
+            type: "GET",
+            dataSrc: ""
+        },
+        columns: [
+            { data: "cod_pedido_mp_cab" },
+            { data: "materia_prima" },
+            { data: "sucursal" },
+            { data: "fecha_pedido" },
+            { data: "fecha_entrega_estimada" },
+            { data: "estado" },
+            {  data: "usuario.usu_nick",
+               defaultContent: ""
+            },
+            {
+                data: null,
+                render: function (data) {
+                    return `
+                        <a href="/registrar_produ/pedido-mp/form/${data.cod_pedido_mp_cab}"
+                           class="btn btn-warning btn-sm">Editar</a>
+
+                        <button class="btn btn-danger btn-sm"
+                                onclick="anularPedido(${data.cod_pedido_mp_cab})">
+                                Anular
+                        </button>
+                    `;
+                }
+            }
+        ]
+    });
+
+});
+
+// ==========================
+// ANULAR PEDIDO
+// ==========================
+function anularPedido(id) {
+
+    if (!confirm("¿Desea anular este pedido?")) return;
+
+    $.ajax({
+        url: `/api/v1/pedido-mp/${id}/anular`,
+        type: "PUT",
+        success: function () {
+            alert("Pedido anulado correctamente");
+            $('#tblPedidoMp').DataTable().ajax.reload();
+        },
+        error: function () {
+            alert("Error al anular el pedido");
+        }
+    });
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro de Mermas{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">
+        {{ 'Editar Merma' if merma else 'Nueva Merma' }}
+    </h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <form id="formMermas">
+                <input type="hidden" id="id_merma_cab"
+                       value="{{ merma.id_merma_cab if merma else '' }}">
+
+                <div class="row">
+                    <!-- Orden de Producción -->
+                    <div class="col-md-4">
+                        <label>Orden de Producción</label>
+                        <select id="cod_orden_prod_cab" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for o in ordenes %}
+                                <option value="{{ o.cod_orden_prod_cab }}"
+                                    {% if merma and merma.cod_orden_prod_cab == o.cod_orden_prod_cab %}selected{% endif %}>
+                                    {{ o.cod_orden_prod_cab }} - {{ o.producto }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Sucursal -->
+                    <div class="col-md-4">
+                        <label>Sucursal</label>
+                        <select id="suc_id" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for s in sucursales %}
+                                <option value="{{ s.id }}"
+                                    {% if merma and merma.suc_id == s.id %}selected{% endif %}>
+                                    {{ s.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Responsable / Usuario -->
+                    <div class="col-md-4">
+                        <label>Responsable</label>
+                        <select id="usu_id" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for f in funcionarios %}
+                                <option value="{{ f.usu_id }}"
+                                    {% if merma and merma.usu_id == f.usu_id %}selected{% endif %}>
+                                    {{ f.usu_nick }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <!-- Fecha Registro -->
+                    <div class="col-md-4">
+                        <label>Fecha Registro</label>
+                        <input type="date" id="fecha_registro"
+                               class="form-control"
+                               value="{{ merma.fecha_registro if merma else '' }}"
+                               required>
+                    </div>
+
+                    <!-- Motivo General -->
+                    <div class="col-md-8">
+                        <label>Motivo General</label>
+                        <input type="text" id="motivo_general" class="form-control"
+                               value="{{ merma.motivo_general if merma else '' }}" required>
+                    </div>
+                </div>
+
+                <br>
+
+                <!-- Observaciones -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <label>Observaciones</label>
+                        <textarea id="observaciones" class="form-control">{{ merma.observaciones if merma else '' }}</textarea>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>Detalle de Merma</h5>
+                <button type="button" class="btn btn-success btn-sm mb-2" onclick="agregarFila()">+ Agregar Producto</button>
+
+                <table class="table table-bordered" id="tblDetalle">
+                    <thead>
+                        <tr>
+                            <th>Producto Perdido</th>
+                            <th>Cantidad</th>
+                            <th>Motivo</th>
+                            <th>Costo Unitario</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if merma and merma.detalle %}
+                            {% for d in merma.detalle %}
+                            <tr>
+                                <td>
+                                    <select class="form-control id_producto_det" required>
+                                        {% for p in productos %}
+                                            <option value="{{ p.id_producto }}"
+                                                {% if d.id_producto == p.id_producto %}selected{% endif %}>
+                                                {{ p.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control cantidad" step="0.01" min="0" value="{{ d.cantidad }}" required></td>
+                                <td><input type="text" class="form-control motivo" value="{{ d.motivo }}" required></td>
+                                <td><input type="number" class="form-control costo" step="0.01" min="0" value="{{ d.costo_unitario }}" required></td>
+                                <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <hr>
+                <button type="button" onclick="guardar()" class="btn btn-primary">Guardar Merma</button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ====================
+// Variables JS
+// ====================
+let productosData = JSON.parse('{{ productos|tojson|safe }}');
+let sucursalesData = JSON.parse('{{ sucursales|tojson|safe }}');
+let funcionariosData = JSON.parse('{{ funcionarios|tojson|safe }}');
+let ordenesData = JSON.parse('{{ ordenes|tojson|safe }}');
+
+function agregarFila() {
+    let options = productosData.map(p => `<option value="${p.id_producto}">${p.nombre}</option>`).join('');
+    let fila = `
+        <tr>
+            <td>
+                <select class="form-control id_producto_det" required>
+                    ${options}
+                </select>
+            </td>
+            <td><input type="number" class="form-control cantidad" step="0.01" min="0" required></td>
+            <td><input type="text" class="form-control motivo" required></td>
+            <td><input type="number" class="form-control costo" step="0.01" min="0" required></td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+        </tr>
+    `;
+    $('#tblDetalle tbody').append(fila);
+}
+
+function eliminarFila(btn) {
+    $(btn).closest('tr').remove();
+}
+
+async function obtenerCsrfToken() {
+    try {
+        let res = await fetch('/api/v1/mermas/csrf-token');
+        let data = await res.json();
+        return data.csrf_token;
+    } catch (err) {
+        console.error("Error obteniendo CSRF token:", err);
+        return null;
+    }
+}
+
+async function guardar() {
+    let detalle = [];
+    $('#tblDetalle tbody tr').each(function() {
+        let id_producto = $(this).find('.id_producto_det').val();
+        let cantidad = parseFloat($(this).find('.cantidad').val());
+        let motivo = $(this).find('.motivo').val();
+        let costo = parseFloat($(this).find('.costo').val());
+        if(id_producto && !isNaN(cantidad) && !isNaN(costo) && motivo) {
+            detalle.push({id_producto: parseInt(id_producto), cantidad, motivo, costo_unitario: costo});
+        }
+    });
+
+    if(detalle.length === 0){
+        Swal.fire('Error', "Debe agregar al menos un producto válido", 'error');
+        return;
+    }
+
+    let cod_orden_prod_cab = parseInt($('#cod_orden_prod_cab').val());
+    let suc_id = parseInt($('#suc_id').val());
+    let usu_id = parseInt($('#usu_id').val());
+    let fecha_registro = $('#fecha_registro').val();
+    let motivo_general = $('#motivo_general').val();
+    let observaciones = $('#observaciones').val();
+
+    if (!cod_orden_prod_cab || !suc_id || !usu_id || !fecha_registro || !motivo_general) {
+        Swal.fire('Error', "Todos los campos de la cabecera son obligatorios", 'error');
+        return;
+    }
+
+    let payload = {cod_orden_prod_cab, suc_id, usu_id, fecha_registro, motivo_general, observaciones, detalle};
+    let csrf_token = await obtenerCsrfToken();
+    if (!csrf_token) {
+        Swal.fire('Error', "No se pudo obtener CSRF token", 'error');
+        return;
+    }
+
+    $.ajax({
+        url: "/api/v1/mermas",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "X-CSRFToken": csrf_token },
+        data: JSON.stringify(payload),
+        success: function() {
+            Swal.fire('Éxito', 'Merma registrada correctamente', 'success').then(() => {
+                $('#formMermas')[0].reset();
+                $('#tblDetalle tbody').empty();
+            });
+        },
+        error: function(err) {
+            Swal.fire('Error', "Error al guardar. Revisa la consola", 'error');
+            console.log(err.responseJSON || err);
+        }
+    });
+}
+</script>
+{% endblock %}

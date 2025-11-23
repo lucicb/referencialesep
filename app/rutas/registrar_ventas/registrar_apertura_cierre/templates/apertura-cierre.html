@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block titulo %}Apertura y Cierre de Caja{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Apertura y Cierre de Caja</h1>
+
+    <button class="btn btn-primary mb-3"
+            onclick="window.location.href='{{ url_for('apcmod.apertura_cierre_form') }}'">
+        + Nueva Apertura de Caja
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-bordered table-striped" id="tablaAperturas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sucursal</th>
+                        <th>Usuario</th>
+                        <th>Fecha Apertura</th>
+                        <th>Fecha Cierre</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if aperturas %}
+                        {% for a in aperturas %}
+                        <tr>
+                            <td>{{ a.id_caja_cab }}</td>
+                            <td>{{ a.sucursal }}</td>
+                            <td>{{ a.usu_id }}</td>
+                            <td>{{ a.fecha_apertura }}</td>
+                            <td>{{ a.fecha_cierre or "-" }}</td>
+                            <td>{{ a.estado }}</td>
+                            <td>
+                                {% if a.estado == 'ABIERTO' %}
+                                    <button class="btn btn-sm btn-warning"
+                                            onclick="window.location.href='{{ url_for('apcmod.apertura_cierre_form', id=a.id_caja_cab) }}'">
+                                        Cerrar Caja
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-sm btn-info"
+                                            onclick="window.location.href='{{ url_for('apcmod.apertura_cierre_form', id=a.id_caja_cab) }}'">
+                                        Ver
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

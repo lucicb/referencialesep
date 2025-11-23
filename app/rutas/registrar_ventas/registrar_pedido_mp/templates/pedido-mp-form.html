@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block titulo %}Pedido de Materia Prima{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">
+        {{ 'Editar Pedido' if pedido else 'Nuevo Pedido de Materia Prima' }}
+    </h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <form id="formPedidoMp">
+                <input type="hidden" id="cod_pedido_mp_cab"
+                       value="{{ pedido.cod_pedido_mp_cab if pedido else '' }}">
+
+                <div class="row">
+
+                    <!-- Materia Prima -->
+                    <div class="col-md-4">
+                        <label>Materia Prima</label>
+                        <select id="id_mp" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for mp in materias_primas %}
+                                <option value="{{ mp.id_materia_prima }}"
+                                     {% if pedido and pedido.id_materia_prima == mp.id_materia_prima %}selected{% endif %}>
+                                     {{ mp.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Sucursal -->
+                    <div class="col-md-4">
+                        <label>Sucursal</label>
+                        <select id="id_suc" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for s in sucursales %}
+                                <option value="{{ s.id }}"
+                                    {% if pedido and pedido.id_suc == s.id %}selected{% endif %}>
+                                    {{ s.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Funcionario -->
+                    <div class="col-md-4">
+                        <label>Funcionario</label>
+                        <select id="usu_id" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for f in funcionarios %}
+                                <option value="{{ f.usu_id }}"
+                                    {% if pedido and pedido.usu_id == f.usu_id %}selected{% endif %}>
+                                    {{ f.usu_nick }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <!-- Fecha Pedido -->
+                    <div class="col-md-4">
+                        <label>Fecha Pedido</label>
+                        <input type="date" id="fecha_pedido"
+                               class="form-control"
+                               value="{{ pedido.fecha_pedido if pedido else '' }}"
+                               required>
+                    </div>
+
+                    <!-- Fecha Entrega Estimada -->
+                    <div class="col-md-4">
+                        <label>Fecha Estimada de Entrega</label>
+                        <input type="date" id="fecha_entrega_estimada"
+                               class="form-control"
+                               value="{{ pedido.fecha_entrega_estimada if pedido else '' }}"
+                               required>
+                    </div>
+
+                    <!-- Prioridad -->
+                    <div class="col-md-4">
+                        <label>Prioridad</label>
+                        <select id="prioridad" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="BAJA">Baja</option>
+                            <option value="MEDIA">Media</option>
+                            <option value="ALTA">Alta</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <!-- Observaciones -->
+                    <div class="col-md-12">
+                        <label>Observaciones</label>
+                        <textarea id="observaciones" class="form-control" rows="2"
+                            placeholder="Escriba cualquier comentario del pedido..."></textarea>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>Detalle del Pedido</h5>
+                <button type="button" class="btn btn-success btn-sm mb-2" onclick="agregarFila()">+ Agregar Material</button>
+
+                <table class="table table-bordered" id="tblDetalle">
+                    <thead>
+                        <tr>
+                            <th>Materia Prima</th>
+                            <th>Cantidad</th>
+                            <th>Costo Unitario</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if pedido and pedido.detalle %}
+                            {% for d in pedido.detalle %}
+                            <tr>
+                                <td>
+                                    <select class="form-control id_mp_det" required>
+                                        {% for mp in materias_primas %}
+                                             <option value="{{ mp.id_materia_prima }}"
+                                                 {% if d.id_materia_prima == mp.id_materia_prima %}selected{% endif %}>
+                                                 {{ mp.descripcion }}
+                                             </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control cantidad" step="1" min="0" value="{{ d.cantidad }}" required></td>
+                                <td><input type="number" class="form-control costo" step="1" min="0" value="{{ d.costo_unitario }}" required></td>
+                                <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <hr>
+                <button type="button" onclick="guardar()" class="btn btn-primary">Guardar Pedido</button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let materiasPrimasData = JSON.parse('{{ materias_primas|tojson|safe }}');
+let sucursalesData = JSON.parse('{{ sucursales|tojson|safe }}');
+let funcionariosData = JSON.parse('{{ funcionarios|tojson|safe }}');
+
+function agregarFila() {
+    let options = materiasPrimasData.map(mp => `<option value="${mp.id_materia_prima}">${mp.descripcion}</option>`).join('');
+    let fila = `
+        <tr>
+            <td>
+                <select class="form-control id_mp_det" required>
+                    ${options}
+                </select>
+            </td>
+            <td><input type="number" class="form-control cantidad" step="1" min="0" required></td>
+            <td><input type="number" class="form-control costo" step="1" min="0" required></td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+        </tr>
+    `;
+    $('#tblDetalle tbody').append(fila);
+}
+
+function eliminarFila(btn) {
+    $(btn).closest('tr').remove();
+}
+
+async function obtenerCsrfToken() {
+    try {
+        let res = await fetch('/api/v1/pedido-mp/csrf-token');
+        let data = await res.json();
+        return data.csrf_token;
+    } catch (err) {
+        console.error("Error obteniendo CSRF token:", err);
+        return null;
+    }
+}
+
+async function guardar() {
+
+    let detalle = [];
+    $('#tblDetalle tbody tr').each(function() {
+        let id_mp = $(this).find('.id_mp_det').val();
+        let cantidad = parseInt($(this).find('.cantidad').val());
+        let costo = parseInt($(this).find('.costo').val());
+
+        if(id_mp && !isNaN(cantidad) && !isNaN(costo)) {
+            detalle.push({
+                id_materia_prima: parseInt(id_mp),
+                cantidad,
+                costo_unitario: costo
+            });
+        }
+    });
+
+    if(detalle.length === 0){
+        Swal.fire('Error', "Debe agregar al menos un material válido", 'error');
+        return;
+    }
+
+    let id_suc_val = $('#id_suc').val();
+    let usu_id_val = $('#usu_id').val();
+    let fecha_pedido = $('#fecha_pedido').val();
+    let fecha_entrega_estimada = $('#fecha_entrega_estimada').val();
+    let prioridad_val = $('#prioridad').val();
+    let observaciones_val = $('#observaciones').val();
+
+    if (!id_suc_val || !usu_id_val || !fecha_pedido || !fecha_entrega_estimada || !prioridad_val) {
+        Swal.fire('Error', "Todos los campos de la cabecera son obligatorios", 'error');
+        return;
+    }
+
+    let payload = {
+        id_suc: parseInt(id_suc_val),
+        usu_id: parseInt(usu_id_val),
+        fecha_pedido,
+        fecha_entrega_estimada,
+        prioridad: prioridad_val,
+        observaciones: observaciones_val,
+        detalle
+    };
+
+    let csrf_token = await obtenerCsrfToken();
+    if (!csrf_token) {
+        Swal.fire('Error', "No se pudo obtener CSRF token", 'error');
+        return;
+    }
+
+    $.ajax({
+        url: "/api/v1/pedido-mp",
+        type: "POST",
+        contentType: "application/json",
+        headers: { "X-CSRFToken": csrf_token },
+        data: JSON.stringify(payload),
+        success: function() {
+            Swal.fire('Éxito', 'Pedido guardado correctamente', 'success').then(() => {
+                $('#formPedidoMp')[0].reset();
+                $('#tblDetalle tbody').empty();
+            });
+        },
+        error: function(err) {
+            Swal.fire('Error', "Error al guardar. Revisa la consola", 'error');
+            console.log(err.responseJSON || err);
+        }
+    });
+}
+</script>
+{% endblock %}

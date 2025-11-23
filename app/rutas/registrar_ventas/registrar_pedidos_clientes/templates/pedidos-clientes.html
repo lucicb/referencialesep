@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block titulo %}Pedidos de Clientes{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Pedidos de Clientes</h1>
+
+    <button class="btn btn-primary mb-3"
+            onclick="window.location.href='{{ url_for('pedmod.pedidos_form') }}'">
+        + Nuevo Pedido
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <table id="tblPedidosClientes" class="table table-striped table-bordered" width="100%">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Cliente</th>
+                        <th>Sucursal</th>
+                        <th>Fecha Pedido</th>
+                        <th>Fecha Entrega</th>
+                        <th>Estado</th>
+                        <th>Usuario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(function () {
+
+    $('#tblPedidosClientes').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: "/api/v1/pedidos-clientes",
+            type: "GET",
+            dataSrc: ""
+        },
+        columns: [
+            { data: "id_pedido_cab" },
+            { data: "cliente" },
+            { data: "sucursal" },
+            { data: "fecha_pedido" },
+            { data: "fecha_entrega" },
+            { data: "estado" },
+            { 
+                data: "usuario.usu_nick",
+                defaultContent: ""
+            },
+            {
+                data: null,
+                render: function (data) {
+                    return `
+                        <a href="/ventas/pedidos-clientes/form/${data.id_pedido_cab}"
+                           class="btn btn-warning btn-sm">Editar</a>
+
+                        <button class="btn btn-danger btn-sm"
+                                onclick="anularPedido(${data.id_pedido_cab})">
+                                Anular
+                        </button>
+                    `;
+                }
+            }
+        ]
+    });
+
+});
+
+// ==========================
+// ANULAR PEDIDO
+// ==========================
+function anularPedido(id) {
+
+    if (!confirm("¿Desea anular este pedido?")) return;
+
+    $.ajax({
+        url: `/api/v1/pedidos-clientes/${id}/anular`,
+        type: "PUT",
+        success: function () {
+            alert("Pedido anulado correctamente");
+            $('#tblPedidosClientes').DataTable().ajax.reload();
+        },
+        error: function () {
+            alert("Error al anular");
+        }
+    });
+}
+
+</script>
+{% endblock %}

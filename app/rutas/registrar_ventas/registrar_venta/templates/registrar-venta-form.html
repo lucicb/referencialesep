@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registrar Venta{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">
+        {{ 'Editar Venta' if venta else 'Nueva Venta' }}
+    </h1>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <form id="formVenta">
+                <!-- Cabecera de venta -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Cliente</label>
+                        <select id="id_cliente" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for c in clientes %}
+                                <option value="{{ c.id_cliente }}" {% if venta and venta.id_cliente == c.id_cliente %}selected{% endif %}>
+                                    {{ c.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Sucursal</label>
+                        <select id="id_suc" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for s in sucursales %}
+                                <option value="{{ s.id }}" {% if venta and venta.id_suc == s.id %}selected{% endif %}>
+                                    {{ s.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Usuario</label>
+                        <select id="usu_id" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            {% for u in usuarios %}
+                                <option value="{{ u.usu_id }}" {% if venta and venta.usu_id == u.usu_id %}selected{% endif %}>
+                                    {{ u.usu_nick }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-3">
+                        <label>Fecha Venta</label>
+                        <input type="datetime-local" id="fecha_venta" class="form-control"
+                               value="{{ venta.fecha_venta|default(fecha_hoy)|replace(' ', 'T') }}" required>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Nro Factura</label>
+                        <input type="text" id="nro_factura" class="form-control"
+                               value="{{ venta.nro_factura if venta else '' }}">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Tipo de Venta</label>
+                        <select id="tipo_venta" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="CONTADO" {% if venta and venta.tipo_venta=='CONTADO' %}selected{% endif %}>CONTADO</option>
+                            <option value="CREDITO" {% if venta and venta.tipo_venta=='CREDITO' %}selected{% endif %}>CREDITO</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Estado</label>
+                        <select id="estado" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="PROCESADO" {% if venta and venta.estado=='PROCESADO' %}selected{% endif %}>PROCESADO</option>
+                            <option value="PENDIENTE" {% if venta and venta.estado=='PENDIENTE' %}selected{% endif %}>PENDIENTE</option>
+                            <option value="ANULADO" {% if venta and venta.estado=='ANULADO' %}selected{% endif %}>ANULADO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <label>Observaciones</label>
+                        <textarea id="observaciones" class="form-control">{{ venta.observaciones if venta else '' }}</textarea>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Detalle de venta -->
+                <h5>Detalle de Productos</h5>
+                <button type="button" class="btn btn-success btn-sm mb-2" onclick="agregarFila()">+ Agregar Producto</button>
+
+                <table class="table table-bordered" id="tblDetalle">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Descuento</th>
+                            <th>Subtotal</th>
+                            <th>Total Item</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if venta and venta.detalle %}
+                            {% for d in venta.detalle %}
+                            <tr>
+                                <td>
+                                    <select class="form-control id_producto" required>
+                                        {% for p in productos %}
+                                            <option value="{{ p.id_producto }}" {% if d.id_producto == p.id_producto %}selected{% endif %}>
+                                                {{ p.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td><input type="number" class="form-control cantidad" step="1" min="0" value="{{ d.cantidad }}" required></td>
+                                <td><input type="number" class="form-control precio_unitario" step="1" min="0" value="{{ d.precio_unitario }}" required></td>
+                                <td><input type="number" class="form-control descuento" step="1" min="0" value="{{ d.descuento }}"></td>
+                                <td><input type="number" class="form-control subtotal" value="{{ d.subtotal|int }}" readonly></td>
+                                <td><input type="number" class="form-control total_item" value="{{ d.total_item|int }}" readonly></td>
+                                <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+
+                <div class="row mt-2">
+                    <div class="col-md-3 offset-md-9">
+                        <label>Total Venta</label>
+                        <input type="number" id="total_venta" class="form-control" value="{{ venta.total|int if venta else 0 }}" readonly>
+                    </div>
+                </div>
+
+                <hr>
+                <button type="button" class="btn btn-primary" onclick="guardarVenta()">Guardar Venta</button>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+let productosData = JSON.parse('{{ productos|tojson|safe }}');
+
+function agregarFila() {
+    let options = productosData.map(p => `<option value="${p.id_producto}">${p.nombre}</option>`).join('');
+    let fila = `
+        <tr>
+            <td><select class="form-control id_producto" required>${options}</select></td>
+            <td><input type="number" class="form-control cantidad" step="1" min="0" value="1" required></td>
+            <td><input type="number" class="form-control precio_unitario" step="1" min="0" value="0" required></td>
+            <td><input type="number" class="form-control descuento" step="1" min="0" value="0"></td>
+            <td><input type="number" class="form-control subtotal" value="0" readonly></td>
+            <td><input type="number" class="form-control total_item" value="0" readonly></td>
+            <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila(this)">X</button></td>
+        </tr>
+    `;
+    $('#tblDetalle tbody').append(fila);
+    recalcular();
+}
+
+function eliminarFila(btn) {
+    $(btn).closest('tr').remove();
+    recalcular();
+}
+
+function recalcular() {
+    let total = 0;
+    $('#tblDetalle tbody tr').each(function() {
+        let cantidad = parseFloat($(this).find('.cantidad').val()) || 0;
+        let precio = parseFloat($(this).find('.precio_unitario').val()) || 0;
+        let descuento = parseFloat($(this).find('.descuento').val()) || 0;
+        let subtotal = cantidad * precio;
+        let total_item = subtotal - descuento;
+        $(this).find('.subtotal').val(subtotal);
+        $(this).find('.total_item').val(total_item);
+        total += total_item;
+    });
+    $('#total_venta').val(total);
+}
+
+function guardarVenta() {
+    let id_cliente = $('#id_cliente').val();
+    let id_suc = $('#id_suc').val();
+    let usu_id = $('#usu_id').val();
+    let tipo_venta = $('#tipo_venta').val();
+    let estado = $('#estado').val();
+
+    if (!id_cliente || !id_suc || !usu_id || !tipo_venta || !estado) {
+        Swal.fire('Error', 'Complete todos los campos requeridos', 'error');
+        return;
+    }
+
+    let filas = $('#tblDetalle tbody tr');
+    if (filas.length === 0) {
+        Swal.fire('Error', 'Agregue al menos un producto', 'error');
+        return;
+    }
+
+    let detalle = [];
+    filas.each(function() {
+        let cant = parseFloat($(this).find('.cantidad').val()) || 0;
+        let precio = parseFloat($(this).find('.precio_unitario').val()) || 0;
+        
+        if (cant > 0 && precio > 0) {
+            detalle.push({
+                id_producto: $(this).find('.id_producto').val(),
+                cantidad: cant,
+                precio_unitario: precio,
+                descuento: parseFloat($(this).find('.descuento').val()) || 0
+            });
+        }
+    });
+
+    if (detalle.length === 0) {
+        Swal.fire('Error', 'Agregue cantidades y precios válidos', 'error');
+        return;
+    }
+
+    let ventaData = {
+        id_cliente: id_cliente,
+        id_suc: id_suc,
+        usu_id: usu_id,
+        nro_factura: $('#nro_factura').val(),
+        tipo_venta: tipo_venta,
+        estado: estado,
+        observaciones: $('#observaciones').val(),
+        detalle: detalle
+    };
+
+    console.log('Enviando:', ventaData);
+
+    $.ajax({
+    url: '/api/v1/venta',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify(ventaData),
+    success: function(response) {
+        if (response.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: 'Venta registrada correctamente',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = '/ventas/registrar-venta/ventas';  // <-- ESTA ES LA LÍNEA CLAVE
+            });
+        } else {
+            Swal.fire('Error', response.error, 'error');
+        }
+    },
+    error: function(xhr) {
+        console.error('Error:', xhr.responseText);
+        Swal.fire('Error', 'No se pudo guardar: ' + xhr.statusText, 'error');
+    }
+});
+}
+
+$(document).on('input', '.cantidad, .precio_unitario, .descuento', recalcular);
+</script>
+{% endblock %}

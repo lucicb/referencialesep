@@ -253,6 +253,47 @@ from app.rutas.referenciales.cierre.cierre_api import cierreapi
 app.register_blueprint(cierreapi, url_prefix=api_v1)
 app.register_blueprint(cierremod, url_prefix=f'{modulo0}/cierre')
 
+# ================================
+# pedidos clientes - Rutas y APIs
+# ================================
+from app.rutas.registrar_ventas.registrar_pedidos_clientes.pedidos_clientes_routes import pedmod
+from app.rutas.registrar_ventas.registrar_pedidos_clientes.pedidos_clientes_api import pedapi
+
+# Registrar Blueprints
+app.register_blueprint(pedmod, url_prefix='/ventas/pedidos-clientes')
+app.register_blueprint(pedapi, url_prefix=f'{api_v1}/pedidos-clientes')
+
+# Exentos CSRF
+csrf.exempt(pedmod)
+csrf.exempt(pedapi)
+
+# ================================
+# apertura y cierre de caja - Rutas y APIs
+# ================================
+from app.rutas.registrar_ventas.registrar_apertura_cierre.apertura_cierre_routes import apcmod
+from app.rutas.registrar_ventas.registrar_apertura_cierre.apertura_cierre_api import apcapi
+
+# Registrar Blueprints
+app.register_blueprint(apcmod, url_prefix='/ventas/apertura-cierre')
+app.register_blueprint(apcapi, url_prefix=f'{api_v1}/apertura-cierre')
+
+# Exentos CSRF
+csrf.exempt(apcmod)
+csrf.exempt(apcapi)
+
+# ================================
+# registrar venta - Rutas y APIs
+# ================================
+from app.rutas.registrar_ventas.registrar_venta.registrar_venta_routes import venta_mod
+from app.rutas.registrar_ventas.registrar_venta.registrar_venta_api import venta_api
+
+# Registrar Blueprints
+app.register_blueprint(venta_mod, url_prefix='/ventas/registrar-venta')
+app.register_blueprint(venta_api)  # <-- SIN url_prefix porque ya lo tiene definido internamente
+
+# Exentos CSRF
+csrf.exempt(venta_mod)
+csrf.exempt(venta_api)
 
 
 

@@ -65,24 +65,39 @@
             <!-- Divider -->
             <hr class="sidebar-divider">
 
-<div class="sidebar-heading">
-                Módulo de Caja
-            </div>
+        <div class="sidebar-heading">
+            Ventas
+        </div>
 
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseCaja"
-                    aria-expanded="true" aria-controls="collapseCaja">
-                    <i class="fas fa-cash-register"></i>
-                    <span class="text-wrap">Caja</span>
-                </a>
-                <div id="collapseCaja" class="collapse" aria-labelledby="headingCaja"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-warning py-2 collapse-inner rounded">
-                        <a class="collapse-item" href="{{ url_for('apertura.aperturaIndex') }}">Apertura</a>
-                        <a class="collapse-item" href="{{ url_for('cierre.cierreIndex') }}">Cierre</a>
-                    </div>
-                </div>
-            </li>
+<li class="nav-item">
+    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseVentas"
+        aria-expanded="true" aria-controls="collapseVentas">
+        <i class="fas fa-shopping-basket"></i>
+        <span class="text-wrap">Ventas</span>
+    </a>
+    <div id="collapseVentas" class="collapse" aria-labelledby="headingVentas"
+        data-parent="#accordionSidebar">
+        <div class="bg-white py-2 collapse-inner rounded">
+
+            <!-- NUEVO: Apertura y Cierre de Caja -->
+            <a class="collapse-item text-wrap" href="{{ url_for('apcmod.apertura_cierre_index') }}">
+                Apertura y Cierre de Caja
+            </a>
+
+            <!-- Enlace a Pedidos de Clientes -->
+            <a class="collapse-item text-wrap" href="{{ url_for('pedmod.pedidos_index') }}">
+                Pedidos de Clientes
+            </a>
+
+
+            <!-- Registrar Venta -->
+            <a class="collapse-item text-wrap" href="{{ url_for('venta_mod.ventas_index') }}">
+                  Registrar Venta
+            </a>
+
+        </div>
+    </div>
+</li>
 
 <!-- Nav Item - Gestionar Compras -->
 <li class="nav-item">

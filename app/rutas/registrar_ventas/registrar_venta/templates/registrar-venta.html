@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro de Ventas{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid">
+
+    <h1 class="h3 mb-4 text-gray-800">Registro de Ventas</h1>
+
+    <button class="btn btn-primary mb-3"
+            onclick="window.location.href='{{ url_for('venta_mod.ventas_form') }}'">
+        + Nueva Venta
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+
+            <table class="table table-bordered table-striped" id="tablaVentas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Sucursal</th>
+                        <th>Usuario</th>
+                        <th>Fecha Venta</th>
+                        <th>Nro Factura</th>
+                        <th>Tipo</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if ventas %}
+                        {% for v in ventas %}
+                        <tr>
+                            <td>{{ v.id_venta_cab }}</td>
+                            <td>{{ v.id_cliente }}</td>
+                            <td>{{ v.id_suc }}</td>
+                            <td>{{ v.usu_id }}</td>
+                            <td>{{ v.fecha_venta }}</td>
+                            <td>{{ v.nro_factura }}</td>
+                            <td>{{ v.tipo_venta }}</td>
+                            <td>{{ "{:,.0f}".format(v.total) }}</td>
+                            <td>
+                                <span class="badge badge-{% if v.estado == 'PROCESADO' %}success{% elif v.estado == 'PENDIENTE' %}warning{% else %}danger{% endif %}">
+                                    {{ v.estado }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info"
+                                        onclick="window.location.href='{{ url_for('venta_mod.ventas_form', id=v.id_venta_cab) }}'">
+                                    Ver / Editar
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center">No hay ventas registradas</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+$(document).ready(function() {
+    $('#tablaVentas').DataTable({
+        "order": [[ 0, "desc" ]],
+        "language": {
+            "search": "Buscar:",
+            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ ventas",
+            "paginate": {
+                "first": "Primero",
+                "last": "Último",
+                "next": "Siguiente",
+                "previous": "Anterior"
+            },
+            "zeroRecords": "No se encontraron resultados"
+        }
+    });
+});
+</script>
+{% endblock %}
