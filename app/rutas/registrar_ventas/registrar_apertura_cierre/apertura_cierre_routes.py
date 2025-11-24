@@ -1,11 +1,15 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template
 from datetime import datetime
+import os
 
 from app.dao.registrar_ventas.registrar_apertura_cierre.apertura_cierre_dao import AperturaCierreDao
 from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
 from app.dao.referenciales.usuario.login_dao import LoginDao
 
-apcmod = Blueprint('apcmod', __name__, template_folder='templates')
+# Obtener la ruta absoluta de la carpeta templates
+template_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+
+apcmod = Blueprint('apcmod', __name__, template_folder=template_dir)
 
 # DAOs
 dao = AperturaCierreDao()
@@ -16,53 +20,60 @@ loginDao = LoginDao()
 # ================================
 # LISTADO HTML
 # ================================
-@apcmod.route('/apertura-cierre')
+@apcmod.route('')
 def apertura_cierre_index():
-    # Obtener todas las aperturas de caja
-    aperturas = dao.listar_aperturas()
-    # Convertir cada apertura a diccionario con datos listos para la tabla
-    aperturas_list = []
-    for a in aperturas:
-        aperturas_list.append({
-            "id_caja_cab": a["id_caja_cab"],
-            "sucursal": a["id_suc"],  # opcional: reemplazar con nombre si quieres
-            "usu_id": a["usu_id"],    # opcional: reemplazar con nombre de usuario
-            "fecha_apertura": a["fecha_apertura"].strftime("%d/%m/%Y %H:%M") if a["fecha_apertura"] else "-",
-            "fecha_cierre": a["fecha_cierre"].strftime("%d/%m/%Y %H:%M") if a["fecha_cierre"] else None,
-            "estado": a["estado"]
-        })
-    return render_template('apertura-cierre.html', aperturas=aperturas_list)
+    try:
+        aperturas = dao.listar_aperturas()
+        aperturas_list = [a.to_dict() for a in aperturas]
+        
+        return render_template('apertura-cierre.html', aperturas=aperturas_list)
+    except Exception as e:
+        print(f"Error en apertura_cierre_index: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {str(e)}", 500
 
 
 # ================================
 # FORM – NUEVO O EDITAR
 # ================================
-@apcmod.route('/apertura-cierre/form', defaults={'id': None})
-@apcmod.route('/apertura-cierre/form/<int:id>')
+@apcmod.route('/form', defaults={'id': None})
+@apcmod.route('/form/<int:id>')
 def apertura_cierre_form(id):
-    # ===============================
-    # SUCURSALES
-    # ===============================
-    sucursales = sucursalDao.get_sucursales()
-    sucursales_dict = [s for s in sucursales]
+    try:
+        # Sucursales
+        sucursales = sucursalDao.get_sucursales()
+        sucursales_dict = [s for s in sucursales]
 
-    # ===============================
-    # FUNCIONARIOS
-    # ===============================
-    funcionarios = loginDao.get_usuarios()
-    funcionarios_dict = [f for f in funcionarios]
+        # Funcionarios
+        funcionarios = loginDao.get_usuarios()
+        funcionarios_dict = [f for f in funcionarios]
 
-    # ===============================
-    # APERTURA/CIERRE SI ES EDICIÓN
-    # ===============================
-    apertura = dao.obtener_por_id(id) if id else None
-    # Indicar si es apertura o cierre
-    es_cierre = apertura and apertura["estado"] == "ABIERTO"
+        # Apertura/Cierre si es edición
+        apertura = None
+        if id:
+            apertura_dto = dao.obtener_por_id(id)
+            apertura = apertura_dto.to_dict() if apertura_dto else None
 
-    return render_template(
-        'apertura-cierre-form.html',
-        sucursales=sucursales_dict,
-        funcionarios=funcionarios_dict,
-        apertura=apertura,
-        es_cierre=es_cierre
-    )
+        # Fecha actual
+        fecha_hoy = datetime.now().strftime("%Y-%m-%d %H:%M")
+        
+        # Próximo ID (para mostrar)
+        proximo_id = "AUTO"
+
+        print(f"Template folder: {template_dir}")
+        print(f"Buscando: apertura-cierre-form.html")
+
+        return render_template(
+            'apertura-cierre-form.html',
+            sucursales=sucursales_dict,
+            funcionarios=funcionarios_dict,
+            apertura=apertura,
+            fecha_hoy=fecha_hoy,
+            proximo_id=proximo_id
+        )
+    except Exception as e:
+        print(f"Error en apertura_cierre_form: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return f"Error: {str(e)}", 500

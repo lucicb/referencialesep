@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request
+from datetime import date  # <-- AGREGAR ESTA LÍNEA
 from app.dao.registrar_ventas.registrar_pedidos_clientes.pedidos_clientes_dao import PedidosClientesDao
 from app.dao.referenciales.producto.ProductoDao import ProductoDao
 from app.dao.referenciales.sucursal.sucursal_dao import SucursalDao
@@ -17,16 +18,17 @@ loginDao = LoginDao()
 # ================================
 # LISTADO HTML
 # ================================
-@pedmod.route('/pedidos')
+@pedmod.route('')  # Cambiar de '/pedidos' a ''
 def pedidos_index():
-    return render_template('pedidos-clientes.html')
+    pedidos = dao.obtener_pedidos()
+    return render_template('pedidos-clientes.html', pedidos=pedidos)
 
 
 # ================================
 # FORM – NUEVO O EDITAR
 # ================================
-@pedmod.route('/pedidos/form', defaults={'id': None})
-@pedmod.route('/pedidos/form/<int:id>')
+@pedmod.route('/form', defaults={'id': None})  # Cambiar de '/pedidos/form' a '/form'
+@pedmod.route('/form/<int:id>')
 def pedidos_form(id):
 
     # Productos
@@ -37,10 +39,10 @@ def pedidos_form(id):
     sucursales = sucursalDao.get_sucursales()
 
     # Funcionarios
-    funcionarios = loginDao.get_usuarios()  # retorna lista de diccionarios
-    funcionarios_dict = [f for f in funcionarios]  # ya son dicts, no necesitamos to_dict()
+    funcionarios = loginDao.get_usuarios()
+    funcionarios_dict = [f for f in funcionarios]
 
-    # Clientes desde la base usando tu conexión
+    # Clientes
     conn = Conexion().getConexion()
     clientes_dict = []
     if conn:
@@ -58,12 +60,14 @@ def pedidos_form(id):
 
     # Pedido si es edición
     pedido = dao.obtener_por_id(id) if id else None
-
+    # Fecha de hoy
+    fecha_hoy = date.today().strftime("%Y-%m-%d")
     return render_template(
         'pedidos-clientes-form.html',
         productos=productos_dict,
         sucursales=sucursales,
         funcionarios=funcionarios_dict,
         clientes=clientes_dict,
-        pedido=pedido
+        pedido=pedido,
+        fecha_hoy=fecha_hoy
     )

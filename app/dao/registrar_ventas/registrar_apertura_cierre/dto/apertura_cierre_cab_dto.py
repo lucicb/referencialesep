@@ -16,8 +16,8 @@ class AperturaCierreCabDto:
         diferencia=None,
         estado=None,
         observaciones=None,
-        id_caja_cab=None,     # se asigna si viene desde la BD
-        detalle=None          # lista de movimientos (AperturaCierreDetDto)
+        id_caja_cab=None,
+        detalle=None
     ):
         self.id_caja_cab = id_caja_cab
         self.id_suc = id_suc
@@ -34,7 +34,7 @@ class AperturaCierreCabDto:
         self.estado = estado
         self.observaciones = observaciones
 
-        self.detalle = detalle if detalle else []  # lista de movimientos
+        self.detalle = detalle if detalle else []
 
     def to_dict(self):
         """
@@ -46,10 +46,10 @@ class AperturaCierreCabDto:
             "id_suc": self.id_suc,
             "usu_id": self.usu_id,
 
-            "fecha_apertura": self.fecha_apertura.isoformat() if self.fecha_apertura else None,
+            "fecha_apertura": self.fecha_apertura.strftime("%Y-%m-%d %H:%M") if self.fecha_apertura else None,
             "monto_inicial": float(self.monto_inicial) if self.monto_inicial is not None else None,
 
-            "fecha_cierre": self.fecha_cierre.isoformat() if self.fecha_cierre else None,
+            "fecha_cierre": self.fecha_cierre.strftime("%Y-%m-%d %H:%M") if self.fecha_cierre else None,
             "monto_final": float(self.monto_final) if self.monto_final is not None else None,
             "monto_teorico": float(self.monto_teorico) if self.monto_teorico is not None else None,
             "diferencia": float(self.diferencia) if self.diferencia is not None else None,

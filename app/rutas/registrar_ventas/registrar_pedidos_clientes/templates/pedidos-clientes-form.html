@@ -69,7 +69,7 @@
                         <label>Fecha Pedido</label>
                         <input type="date" id="fecha_pedido"
                                class="form-control"
-                               value="{{ pedido.fecha_pedido if pedido else '' }}"
+                               value="{{ pedido.fecha_pedido if pedido else fecha_hoy }}"
                                required>
                     </div>
 
@@ -188,59 +188,89 @@ async function obtenerCsrfToken() {
 }
 
 async function guardar() {
+    console.log('Guardando pedido...');
 
+    // Validar campos principales
+    let id_cliente = $('#id_cliente').val();
+    let id_suc = $('#id_suc').val();
+    let usu_id = $('#usu_id').val();
+    let fecha_pedido = $('#fecha_pedido').val();
+    let fecha_entrega = $('#fecha_entrega').val();
+
+    if(!id_cliente || !id_suc || !usu_id || !fecha_pedido || !fecha_entrega) {
+        Swal.fire('Error', 'Complete todos los campos obligatorios', 'error');
+        return;
+    }
+
+    // Construir detalle
     let detalle = [];
     $('#tblDetalle tbody tr').each(function() {
-
         let id_producto = $(this).find('.id_producto_det').val();
-        let cantidad = parseInt($(this).find('.cantidad').val());
-        let precio = parseInt($(this).find('.precio').val());
+        let cantidad = parseFloat($(this).find('.cantidad').val());
+        let precio = parseFloat($(this).find('.precio').val());
         let obs = $(this).find('.obs_det').val();
 
-        if(id_producto && !isNaN(cantidad) && !isNaN(precio)) {
+        if(id_producto && !isNaN(cantidad) && cantidad > 0 && !isNaN(precio) && precio > 0) {
             detalle.push({
-                id_producto,
-                cantidad,
+                id_producto: id_producto,
+                cantidad: cantidad,
                 precio_unitario: precio,
-                observaciones: obs
+                observaciones: obs || ''
             });
         }
     });
 
     if(detalle.length === 0){
-        Swal.fire('Error', "Debe cargar al menos un producto", 'error');
+        Swal.fire('Error', 'Debe agregar al menos un producto con cantidad y precio válidos', 'error');
         return;
     }
 
     let payload = {
-        id_cliente: parseInt($('#id_cliente').val()),
-        id_suc: parseInt($('#id_suc').val()),
-        usu_id: $('#usu_id').val(),
-        fecha_pedido: $('#fecha_pedido').val(),
-        fecha_entrega: $('#fecha_entrega').val(),
-        observaciones: $('#observaciones').val(),
-        detalle
+        id_cliente: parseInt(id_cliente),
+        id_suc: parseInt(id_suc),
+        usu_id: usu_id,
+        fecha_pedido: fecha_pedido,
+        fecha_entrega: fecha_entrega,
+        estado: 'PENDIENTE',
+        observaciones: $('#observaciones').val() || '',
+        detalle: detalle
     };
 
-    let csrf_token = await obtenerCsrfToken();
+    console.log('Payload:', payload);
 
-    $.ajax({
-        url: "/api/v1/pedidos-clientes",
-        type: "POST",
-        headers: { "X-CSRFToken": csrf_token },
-        contentType: "application/json",
-        data: JSON.stringify(payload),
-        success: function() {
-            Swal.fire("Éxito", "Pedido guardado correctamente", "success")
-                .then(() => {
-                    window.location.href = "/ventas/pedidos-clientes";
-                });
-        },
-        error: function(err) {
-            Swal.fire("Error", err.responseJSON?.error || "Error al guardar", "error");
-        }
-    });
+    try {
+        let csrf_token = await obtenerCsrfToken();
 
-}
+        $.ajax({
+            url: '/api/v1/pedidos-clientes',
+            type: 'POST',
+            headers: { 'X-CSRFToken': csrf_token },
+            contentType: 'application/json',
+            data: JSON.stringify(payload),
+            success: function(response) {
+                console.log('Respuesta:', response);
+                if(response.success !== false) {
+                    Swal.fire('Éxito', 'Pedido guardado correctamente', 'success').then(() => {
+                        window.location.href = '/ventas/pedidos-clientes';
+                    });
+                } else {
+                    Swal.fire('Error', response.error || 'Error al guardar', 'error');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error:', xhr.responseText);
+                let errorMsg = 'Error al guardar el pedido';
+                try {
+                    let resp = JSON.parse(xhr.responseText);
+                    errorMsg = resp.error || errorMsg;
+                } catch(e) {}
+                Swal.fire('Error', errorMsg, 'error');
+            }
+        });
+    } catch(e) {
+        console.error('Error obteniendo token:', e);
+        Swal.fire('Error', 'Error al procesar la solicitud', 'error');
+    }
+}  // <-- Cierre correcto de la función guardar()
 </script>
 {% endblock %}

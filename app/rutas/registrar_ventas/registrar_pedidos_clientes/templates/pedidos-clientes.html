@@ -8,7 +8,7 @@
     <h1 class="h3 mb-4 text-gray-800">Pedidos de Clientes</h1>
 
     <button class="btn btn-primary mb-3"
-            onclick="window.location.href='{{ url_for('pedmod.pedidos_form') }}'">
+        onclick="window.location.href='/ventas/pedidos-clientes/form'">
         + Nuevo Pedido
     </button>
 
@@ -23,6 +23,7 @@
                         <th>Sucursal</th>
                         <th>Fecha Pedido</th>
                         <th>Fecha Entrega</th>
+                        <th>Total</th>
                         <th>Estado</th>
                         <th>Usuario</th>
                         <th>Acciones</th>
@@ -37,66 +38,128 @@
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function () {
-
-    $('#tblPedidosClientes').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: "/api/v1/pedidos-clientes",
-            type: "GET",
-            dataSrc: ""
-        },
-        columns: [
-            { data: "id_pedido_cab" },
-            { data: "cliente" },
-            { data: "sucursal" },
-            { data: "fecha_pedido" },
-            { data: "fecha_entrega" },
-            { data: "estado" },
-            { 
-                data: "usuario.usu_nick",
-                defaultContent: ""
-            },
-            {
-                data: null,
-                render: function (data) {
-                    return `
-                        <a href="/ventas/pedidos-clientes/form/${data.id_pedido_cab}"
-                           class="btn btn-warning btn-sm">Editar</a>
-
-                        <button class="btn btn-danger btn-sm"
-                                onclick="anularPedido(${data.id_pedido_cab})">
-                                Anular
-                        </button>
-                    `;
-                }
+    console.log('Inicializando DataTable...');
+    
+    // Primero probemos si la API responde
+    $.ajax({
+        url: '/api/v1/pedidos-clientes',
+        type: 'GET',
+        success: function(response) {
+            console.log('Respuesta de la API:', response);
+            console.log('Tipo de respuesta:', typeof response);
+            console.log('Es array?', Array.isArray(response));
+            
+            // Inicializar DataTable con los datos
+            let datos = response;
+            
+            // Si viene envuelto en un objeto
+            if(response.pedidos) {
+                datos = response.pedidos;
+                console.log('Datos extraídos:', datos);
             }
-        ]
+            
+            $('#tblPedidosClientes').DataTable({
+                data: datos,  // Usar los datos directamente
+                columns: [
+                    { data: "id_pedido_cab" },
+                    { data: "cliente" },
+                    { data: "sucursal" },
+                    { 
+                        data: "fecha_pedido",
+                        render: function(data) {
+                            return data || "-";
+                        }
+                    },
+                    { 
+                        data: "fecha_entrega",
+                        render: function(data) {
+                            return data || "-";
+                        }
+                    },
+                    { 
+                        data: "total",
+                        render: function(data) {
+                            return parseFloat(data || 0).toLocaleString('es-PY');
+                        }
+                    },
+                    { 
+                        data: "estado",
+                        render: function(data) {
+                            let badge = 'secondary';
+                            if(data === 'PENDIENTE') badge = 'warning';
+                            else if(data === 'PROCESANDO') badge = 'info';
+                            else if(data === 'ENTREGADO') badge = 'success';
+                            else if(data === 'CANCELADO' || data === 'ANULADO') badge = 'danger';
+                            
+                            return `<span class="badge badge-${badge}">${data}</span>`;
+                        }
+                    },
+                    { data: "usuario" },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (data) {
+                            return `
+                                <a href="/ventas/pedidos-clientes/form/${data.id_pedido_cab}"
+                                   class="btn btn-info btn-sm" title="Editar">
+                                   <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-danger btn-sm"
+                                        onclick="anularPedido(${data.id_pedido_cab})"
+                                        title="Anular">
+                                        <i class="fas fa-ban"></i>
+                                </button>
+                            `;
+                        }
+                    }
+                ],
+                order: [[0, 'desc']],
+                language: {
+                    search: "Buscar:",
+                    lengthMenu: "Mostrar _MENU_ registros",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ pedidos",
+                    paginate: {
+                        first: "Primero",
+                        last: "Último",
+                        next: "Siguiente",
+                        previous: "Anterior"
+                    },
+                    zeroRecords: "No se encontraron pedidos",
+                    emptyTable: "No hay pedidos registrados"
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error al cargar pedidos:', error);
+            console.error('Status:', status);
+            console.error('Response:', xhr.responseText);
+            alert('Error al cargar los pedidos. Revisa la consola.');
+        }
     });
-
 });
 
-// ==========================
-// ANULAR PEDIDO
-// ==========================
 function anularPedido(id) {
-
-    if (!confirm("¿Desea anular este pedido?")) return;
-
+    if(!confirm('¿Desea anular este pedido?')) return;
+    
     $.ajax({
         url: `/api/v1/pedidos-clientes/${id}/anular`,
-        type: "PUT",
-        success: function () {
-            alert("Pedido anulado correctamente");
-            $('#tblPedidosClientes').DataTable().ajax.reload();
+        type: 'PUT',
+        success: function (response) {
+            if(response.success) {
+                alert('Pedido anulado correctamente');
+                location.reload();
+            } else {
+                alert('Error: ' + (response.error || 'No se pudo anular'));
+            }
         },
-        error: function () {
-            alert("Error al anular");
+        error: function (xhr) {
+            console.error('Error:', xhr.responseText);
+            alert('Error al anular el pedido');
         }
     });
 }
-
 </script>
 {% endblock %}

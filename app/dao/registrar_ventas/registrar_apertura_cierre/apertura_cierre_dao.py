@@ -29,17 +29,17 @@ class AperturaCierreDao:
         for f in filas:
             aperturas.append(
                 AperturaCierreCabDto(
-                    id_caja_cab = f[0],
-                    id_suc = f[1],
-                    usu_id = f[2],
-                    fecha_apertura = f[3],
-                    monto_inicial = f[4],
-                    fecha_cierre = f[5],
-                    monto_final = f[6],
-                    monto_teorico = f[7],
-                    diferencia = f[8],
-                    estado = f[9],
-                    observaciones = f[10]
+                    id_caja_cab=f[0],
+                    id_suc=f[1],
+                    usu_id=f[2],
+                    fecha_apertura=f[3],
+                    monto_inicial=f[4],
+                    fecha_cierre=f[5],
+                    monto_final=f[6],
+                    monto_teorico=f[7],
+                    diferencia=f[8],
+                    estado=f[9],
+                    observaciones=f[10]
                 )
             )
 
@@ -59,7 +59,7 @@ class AperturaCierreDao:
                 estado, observaciones
             FROM caja_cab
             WHERE id_caja_cab = %s
-        """, (id_caja_cab, ))
+        """, (id_caja_cab,))
 
         f = cur.fetchone()
 
@@ -67,17 +67,17 @@ class AperturaCierreDao:
             return None
 
         return AperturaCierreCabDto(
-            id_caja_cab = f[0],
-            id_suc = f[1],
-            usu_id = f[2],
-            fecha_apertura = f[3],
-            monto_inicial = f[4],
-            fecha_cierre = f[5],
-            monto_final = f[6],
-            monto_teorico = f[7],
-            diferencia = f[8],
-            estado = f[9],
-            observaciones = f[10]
+            id_caja_cab=f[0],
+            id_suc=f[1],
+            usu_id=f[2],
+            fecha_apertura=f[3],
+            monto_inicial=f[4],
+            fecha_cierre=f[5],
+            monto_final=f[6],
+            monto_teorico=f[7],
+            diferencia=f[8],
+            estado=f[9],
+            observaciones=f[10]
         )
 
     # ==============================
@@ -91,14 +91,13 @@ class AperturaCierreDao:
                 id_suc, usu_id, fecha_apertura,
                 monto_inicial, estado, observaciones
             )
-            VALUES (%s, %s, NOW(), %s, %s, %s)
+            VALUES (%s, %s, NOW(), %s, 'ABIERTO', %s)
             RETURNING id_caja_cab
         """, (
             dto.id_suc,
             dto.usu_id,
             dto.monto_inicial,
-            dto.estado,
-            dto.observaciones
+            dto.observaciones or ''
         ))
 
         id_generado = cur.fetchone()[0]
@@ -108,8 +107,25 @@ class AperturaCierreDao:
     # ==============================
     # CERRAR CAJA
     # ==============================
-    def cerrar_caja(self, dto: AperturaCierreCabDto):
+    def cerrar_caja(self, id_caja_cab, monto_final):
         cur = self.con.cursor()
+
+        # Calcular monto teórico (suma de movimientos + monto inicial)
+        cur.execute("""
+            SELECT 
+                c.monto_inicial,
+                COALESCE(SUM(CASE WHEN m.tipo = 'ingreso' THEN m.monto ELSE -m.monto END), 0) as total_movimientos
+            FROM caja_cab c
+            LEFT JOIN caja_mov m ON c.id_caja_cab = m.id_caja_cab
+            WHERE c.id_caja_cab = %s
+            GROUP BY c.monto_inicial
+        """, (id_caja_cab,))
+        
+        resultado = cur.fetchone()
+        monto_inicial = resultado[0] if resultado else 0
+        total_movimientos = resultado[1] if resultado else 0
+        monto_teorico = monto_inicial + total_movimientos
+        diferencia = monto_final - monto_teorico
 
         cur.execute("""
             UPDATE caja_cab
@@ -117,19 +133,12 @@ class AperturaCierreDao:
                 monto_final = %s,
                 monto_teorico = %s,
                 diferencia = %s,
-                estado = %s,
-                observaciones = %s
+                estado = 'CERRADO'
             WHERE id_caja_cab = %s
-        """, (
-            dto.monto_final,
-            dto.monto_teorico,
-            dto.diferencia,
-            dto.estado,
-            dto.observaciones,
-            dto.id_caja_cab
-        ))
+        """, (monto_final, monto_teorico, diferencia, id_caja_cab))
 
         self.con.commit()
+        return True
 
     # ==============================
     # LISTAR MOVIMIENTOS DE UNA CAJA
@@ -144,7 +153,7 @@ class AperturaCierreDao:
             FROM caja_mov
             WHERE id_caja_cab = %s
             ORDER BY fecha_mov ASC
-        """, (id_caja_cab, ))
+        """, (id_caja_cab,))
 
         filas = cur.fetchall()
         movimientos = []
@@ -152,13 +161,13 @@ class AperturaCierreDao:
         for f in filas:
             movimientos.append(
                 AperturaCierreDetDto(
-                    id_caja_mov = f[0],
-                    id_caja_cab = f[1],
-                    tipo = f[2],
-                    concepto = f[3],
-                    monto = f[4],
-                    fecha_mov = f[5],
-                    usu_id = f[6]
+                    id_caja_mov=f[0],
+                    id_caja_cab=f[1],
+                    tipo=f[2],
+                    concepto=f[3],
+                    monto=f[4],
+                    fecha_mov=f[5],
+                    usu_id=f[6]
                 )
             )
 

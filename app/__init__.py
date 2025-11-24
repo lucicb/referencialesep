@@ -261,8 +261,7 @@ from app.rutas.registrar_ventas.registrar_pedidos_clientes.pedidos_clientes_api 
 
 # Registrar Blueprints
 app.register_blueprint(pedmod, url_prefix='/ventas/pedidos-clientes')
-app.register_blueprint(pedapi, url_prefix=f'{api_v1}/pedidos-clientes')
-
+app.register_blueprint(pedapi)
 # Exentos CSRF
 csrf.exempt(pedmod)
 csrf.exempt(pedapi)
@@ -273,11 +272,9 @@ csrf.exempt(pedapi)
 from app.rutas.registrar_ventas.registrar_apertura_cierre.apertura_cierre_routes import apcmod
 from app.rutas.registrar_ventas.registrar_apertura_cierre.apertura_cierre_api import apcapi
 
-# Registrar Blueprints
-app.register_blueprint(apcmod, url_prefix='/ventas/apertura-cierre')
-app.register_blueprint(apcapi, url_prefix=f'{api_v1}/apertura-cierre')
+app.register_blueprint(apcmod, url_prefix='/ventas/apertura-cierre')  # <-- Agregar url_prefix vacío o sin prefijo
+app.register_blueprint(apcapi)  # Este ya tiene url_prefix en su definición
 
-# Exentos CSRF
 csrf.exempt(apcmod)
 csrf.exempt(apcapi)
 

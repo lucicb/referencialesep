@@ -6,7 +6,7 @@ from app.dao.registrar_ventas.registrar_pedidos_clientes.pedidos_clientes_dao im
 from app.dao.registrar_ventas.registrar_pedidos_clientes.dto.pedidos_clientes_cab_dto import PedidosClientesCabDto
 from app.dao.registrar_ventas.registrar_pedidos_clientes.dto.pedidos_clientes_det_dto import PedidosClientesDetDto
 
-pedapi = Blueprint('pedapi', __name__)
+pedapi = Blueprint('pedapi', __name__, url_prefix='/api/v1/pedidos-clientes')
 dao = PedidosClientesDao()
 
 # ============================================================
